@@ -1,0 +1,38 @@
+name: Test
+description: Description
+steps:
+  - type: shellScript
+    name: Step 1
+    description: Simple test step
+    continueOnError: false
+    script: |
+      echo "hello world!";
+
+  - type: shellScript
+    name: Step 2
+    description: Simple test step 2
+    continueOnError: true
+    script: |
+      echo "I can count!";
+      
+      for i in 1 2 3 4 5; do
+        echo "$i";
+        sleep 1;
+      done
+      
+      echo "Hello there!";
+      
+      cat >> /tmp/my-tmp-file <<EOF
+      Oh, just testing the heredoc
+      EOF
+      
+      echo "Actually, I wanted to test multiple line bash script"
+      exit 124;
+
+  - type: shellScript
+    name: Step 3
+    description: Simple test step
+    continueOnError: false
+    script: |
+      echo "Let's cat the file:";
+      cat /tmp/my-tmp-file  
