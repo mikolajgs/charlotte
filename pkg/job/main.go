@@ -30,6 +30,13 @@ func (j *Job) Validate() (bool, map[string]int) {
 
 // Run executes a Step in a specific RuntimeEnvironment.
 func (j *Job) Run(runtime runtimeenvironment.IRuntimeEnvironment) (int, []string) {
+
+	// for docker, we init to initialize the runtime environment first
+	// things are not executed per step
+
+	// runtime.Create
+	// defer runtime.Destroy
+
 	for _, step := range j.Steps.([]step.IStep) {
 		exitCode, errors, fOut, fErr := runtime.Run(step)
 		fmt.Fprintf(os.Stdout, "exitCode: %d\n", exitCode)

@@ -3,9 +3,15 @@ package dockerruntimeenvironment
 import (
 	runtimeenvironment "charlotte/pkg/runtime-environment"
 	"charlotte/pkg/step"
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 )
 
 type DockerRuntimeEnvironment struct {
@@ -13,7 +19,28 @@ type DockerRuntimeEnvironment struct {
 }
 
 func (e *DockerRuntimeEnvironment) CreateDocker(fStep string, fOut string, fErr string) (string, error) {
-	cmd := exec.Command("docker", "container", "create", "-t", "-i", "alpine")
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	defer cli.Close()
+
+	reader, err := cli.ImagePull(ctx, "docker.io/library/alpine", types.ImagePullOptions{})
+	if err != nil {
+		panic(err)
+	}
+	io.Copy(os.Stdout, reader)
+
+	_, err = cli.ContainerCreate(ctx, &container.Config{
+		Image: "alpine",
+		Cmd:   []string{"echo", "hello world"},
+	}, nil, nil, nil, "")
+	if err != nil {
+		panic(err)
+	}
+
+	/*cmd := exec.Command("docker", "container", "create", "-t", "-i", "alpine")
 	if err := cmd.Start(); err != nil {
 		return "", fmt.Errorf(fmt.Sprint("error starting cmd: %s", err.Error()))
 	}
@@ -23,16 +50,12 @@ func (e *DockerRuntimeEnvironment) CreateDocker(fStep string, fOut string, fErr 
 		} else {
 			return "", fmt.Errorf(fmt.Sprint("error waiting for cmd: %s", err.Error()))
 		}
-	}
+	}*/
 
 	return "id", nil
 }
 
 func (e *DockerRuntimeEnvironment) Run(step step.IStep) (int, []string, string, string) {
-	if _, err := exec.LookPath("docker"); err != nil {
-		return 102, []string{fmt.Sprint("docker not found: %s", err.Error())}, "", ""
-	}
-
 	errCode, errStr, fStep, fOut, fErr := e.InitRunStep(step)
 	if errCode != 0 {
 		return errCode, []string{errStr}, "", ""
