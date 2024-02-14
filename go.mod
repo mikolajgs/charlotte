@@ -1,6 +1,6 @@
 module charlotte
 
-go 1.21.7
+go 1.20
 
 require (
 	github.com/mikogs/go-broccli/v2 v2.0.0
