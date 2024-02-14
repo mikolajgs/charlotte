@@ -1,5 +1,5 @@
 name: Test
-description: Description
+description: A simple workflow that would run simple bash steps
 steps:
   - type: shellScript
     name: Step 1

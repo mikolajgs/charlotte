@@ -1,11 +1,11 @@
 package dockerruntimeenvironment
 
 import (
+	runtimeenvironment "charlotte/pkg/runtime-environment"
+	"charlotte/pkg/step"
 	"fmt"
 	"os"
 	"os/exec"
-	"streamline/pkg/step"
-	"streamline/pkg/runtime-environment"
 )
 
 type DockerRuntimeEnvironment struct {
@@ -37,7 +37,7 @@ func (e *DockerRuntimeEnvironment) Run(step step.IStep) (int, []string, string, 
 	if errCode != 0 {
 		return errCode, []string{errStr}, "", ""
 	}
-	
+
 	defer os.Remove(fStep.Name())
 	defer fStep.Close()
 	defer fOut.Close()

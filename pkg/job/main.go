@@ -1,25 +1,26 @@
 package job
 
 import (
-	"github.com/bitsnops/go-valifieldator"
-	_ "gopkg.in/yaml.v2"
-	"streamline/pkg/input"
-	"streamline/pkg/output"
-	"streamline/pkg/step"
-	"streamline/pkg/step/shell-script"
-	"streamline/pkg/runtime-environment"
+	"charlotte/pkg/input"
+	"charlotte/pkg/output"
+	runtimeenvironment "charlotte/pkg/runtime-environment"
+	"charlotte/pkg/step"
+	shellscriptstep "charlotte/pkg/step/shell-script"
 	"fmt"
-	"os"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"os"
+
+	"github.com/mikogs/go-valifieldator"
+	_ "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type Job struct {
-	Name        string    `yaml:"name" validation:"req lenmin:2 lenmax:80"`
-	Description string    `yaml:"description" validation:"lenmax:240"`
-	Inputs      []*input.Input  `yaml:"inputs"`
+	Name        string           `yaml:"name" validation:"req lenmin:2 lenmax:80"`
+	Description string           `yaml:"description" validation:"lenmax:240"`
+	Inputs      []*input.Input   `yaml:"inputs"`
 	Outputs     []*output.Output `yaml:"outputs"`
-	Steps       interface{} `yaml:"steps"`
+	Steps       interface{}      `yaml:"steps"`
 }
 
 func (j *Job) Validate() (bool, map[string]int) {

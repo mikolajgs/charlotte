@@ -1,7 +1,7 @@
 package input
 
 import (
-	"github.com/bitsnops/go-valifieldator"
+	"github.com/mikogs/go-valifieldator"
 	_ "gopkg.in/yaml.v2"
 )
 

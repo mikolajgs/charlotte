@@ -1,16 +1,17 @@
 package main
 
 import (
+	"charlotte/pkg/job"
+	dockerruntimeenvironment "charlotte/pkg/runtime-environment/docker"
+	localruntimeenvironment "charlotte/pkg/runtime-environment/local"
 	"fmt"
-	"streamline/pkg/job"
-	"streamline/pkg/runtime-environment/local"
-	"streamline/pkg/runtime-environment/docker"
 	"os"
-	gocli "github.com/bitsnops/go-broccli"
+
+	gocli "github.com/mikogs/go-broccli"
 )
 
 func main() {
-	cli := gocli.NewCLI("ops-run", "Test run", "Nicholas Gasior <gasior@forthcoming.systems>")
+	cli := gocli.NewCLI("ops-run", "Test run", "Streamln Co. <streamln@streamln.co>")
 	cmdRun := cli.AddCmd("run-job", "Runs YAML job file", runJobHandler)
 	cmdRun.AddFlag("file", "f", "FILENAME", "Path to filename with a job", gocli.TypePathRegularFile|gocli.Required|gocli.MustExist, nil)
 	_ = cli.AddCmd("version", "Prints version", versionHandler)
@@ -43,8 +44,6 @@ func runJobHandler(c *gocli.CLI) int {
 	exitError, errors = j.Run(runenv2)
 	fmt.Fprintf(os.Stdout, "exitCode: %v\n", exitError)
 	fmt.Fprintf(os.Stdout, "errors: %v\n", errors)
-
-
 
 	return 0
 }

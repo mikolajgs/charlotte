@@ -1,7 +1,7 @@
 package shellscriptstep
 
 import (
-	"github.com/bitsnops/go-valifieldator"
+	"github.com/mikogs/go-valifieldator"
 )
 
 type ShellScriptStep struct {
