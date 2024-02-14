@@ -13,7 +13,7 @@ import (
 func main() {
 	cli := gocli.NewCLI("ops-run", "Test run", "Streamln Co. <streamln@streamln.co>")
 	cmdRun := cli.AddCmd("run-job", "Runs YAML job file", runJobHandler)
-	cmdRun.AddFlag("file", "f", "FILENAME", "Path to filename with a job", gocli.TypePathFile, gocli.IsRequired|gocli.IsExistent|gocli.IsRegularFile, nil)
+	cmdRun.AddFlag("file", "f", "FILENAME", "Path to filename with a job", gocli.TypePathFile, gocli.IsRequired|gocli.IsExistent|gocli.IsRegularFile)
 	_ = cli.AddCmd("version", "Prints version", versionHandler)
 	if len(os.Args) == 2 && (os.Args[1] == "-v" || os.Args[1] == "--version") {
 		os.Args = []string{"App", "version"}
