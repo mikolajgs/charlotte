@@ -1,0 +1,34 @@
+---
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-20.04
+    steps:
+      - name: go test
+        shell: bash
+        run: |
+          cd cmd/ops-run
+          go test
+
+      - name: go build
+        shell: bash
+        run: |
+          cd cmd/ops-run
+          go build .
+          ./ops-run
+
+      - name: run-job
+        shell: bash
+        run: |
+          cd cmd/ops-run
+          ./ops-run run-job -f ../../sample-files/job.yaml
