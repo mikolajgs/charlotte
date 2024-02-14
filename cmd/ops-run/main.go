@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	gocli "github.com/mikogs/go-broccli"
+	gocli "github.com/mikogs/go-broccli/v2"
 )
 
 func main() {

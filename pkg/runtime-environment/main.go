@@ -17,6 +17,7 @@ type IRuntimeEnvironment interface {
 type RuntimeEnvironment struct {
 }
 
+// InitRunStep will create three temporary files to store the script, write the stdout and write the stderr.
 func (r *RuntimeEnvironment) InitRunStep(step step.IStep) (int, string, *os.File, *os.File, *os.File) {
 	script := step.GetScript()
 	if script == "" {
@@ -46,6 +47,7 @@ func (r *RuntimeEnvironment) InitRunStep(step step.IStep) (int, string, *os.File
 	return 0, "", fStep, fOut, fErr
 }
 
+// CreateCmd creates and returns a command along with io.ReadCloser to attach stdout and stderr.
 func (r *RuntimeEnvironment) CreateCmd(name string, args ...string) (int, string, *exec.Cmd, io.ReadCloser, io.ReadCloser) {
 	cmd := exec.Command(name, args...)
 	stdout, err := cmd.StdoutPipe()
@@ -59,6 +61,7 @@ func (r *RuntimeEnvironment) CreateCmd(name string, args ...string) (int, string
 	return 0, "", cmd, stdout, stderr
 }
 
+// CreateWaitGroup creates WaitGroups that will pipe stdout and stderr to specific files.
 func (r *RuntimeEnvironment) CreateWaitGroup(stdout io.ReadCloser, fOut *os.File, stderr io.ReadCloser, fErr *os.File) *sync.WaitGroup {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)

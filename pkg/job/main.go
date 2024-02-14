@@ -28,6 +28,7 @@ func (j *Job) Validate() (bool, map[string]int) {
 	return isValid, failedFields
 }
 
+// Run executes a Step in a specific RuntimeEnvironment.
 func (j *Job) Run(runtime runtimeenvironment.IRuntimeEnvironment) (int, []string) {
 	for _, step := range j.Steps.([]step.IStep) {
 		exitCode, errors, fOut, fErr := runtime.Run(step)
@@ -43,6 +44,7 @@ func (j *Job) Run(runtime runtimeenvironment.IRuntimeEnvironment) (int, []string
 	return 0, []string{}
 }
 
+// NewFromFile creates Job instance from path to a YAML file.
 func NewFromFile(f string) (*Job, error) {
 	var j Job
 	b, err := ioutil.ReadFile(f)

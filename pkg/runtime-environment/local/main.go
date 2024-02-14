@@ -3,20 +3,22 @@ package localruntimeenvironment
 import (
 	"fmt"
 	"os"
-	"streamline/pkg/step"
+	"charlotte/pkg/step"
 	"os/exec"
-	"streamline/pkg/runtime-environment"
+	"charlotte/pkg/runtime-environment"
 )
 
 type LocalRuntimeEnvironment struct {
 	runtimeenvironment.RuntimeEnvironment
 }
 
+// Run runs a Step and returns error code, error string, path to file containing stdout and path to file containing stderr.
 func (e *LocalRuntimeEnvironment) Run(step step.IStep) (int, []string, string, string) {
 	if _, err := exec.LookPath("bash"); err != nil {
 		return 102, []string{fmt.Sprint("bash not found: %s", err.Error())}, "", ""
 	}
 
+	// fOut and fErr are io.File to stdout and stderr
 	errCode, errStr, fStep, fOut, fErr := e.InitRunStep(step)
 	if errCode != 0 {
 		return errCode, []string{errStr}, "", ""
@@ -36,9 +38,11 @@ func (e *LocalRuntimeEnvironment) Run(step step.IStep) (int, []string, string, s
 		return 108, []string{fmt.Sprint("error starting cmd: %s", err.Error())}, "", ""
 	}
 
+	// create wait group that attaches stdout and stderr to files
 	wg := e.CreateWaitGroup(stdout, fOut, stderr, fErr)
 	wg.Wait()
 
+	// wait for the command to finish
 	if err := cmd.Wait(); err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
 			return exiterr.ExitCode(), []string{"exit code different than 0"}, fOut.Name(), fErr.Name()
