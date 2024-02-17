@@ -7,7 +7,6 @@ import (
 	"charlotte/pkg/step"
 	shellscriptstep "charlotte/pkg/step/shell-script"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/mikogs/go-valifieldator"
@@ -29,38 +28,37 @@ func (j *Job) Validate() (bool, map[string]int) {
 }
 
 // Run executes a Step in a specific RuntimeEnvironment.
-func (j *Job) Run(runtime runtimeenvironment.IRuntimeEnvironment) (int, []string) {
+func (j *Job) Run(runtime runtimeenvironment.IRuntimeEnvironment) error {
 
-	// for docker, we init to initialize the runtime environment first
-	// things are not executed per step
+	err := runtime.Create()
+	if err != nil {
+		return fmt.Errorf("error creating docker: %w", err)
+	}
 
-	// runtime.Create
-	// defer runtime.Destroy
+	defer runtime.Destroy()
 
 	for _, step := range j.Steps.([]step.IStep) {
-		exitCode, errors, fOut, fErr := runtime.Run(step)
-		fmt.Fprintf(os.Stdout, "exitCode: %d\n", exitCode)
-		fmt.Fprintf(os.Stdout, "errors: %v\n", errors)
-		fmt.Fprintf(os.Stdout, "fOut: %s\n", fOut)
-		fmt.Fprintf(os.Stdout, "fErr: %s\n", fErr)
-		if exitCode != 0 && !step.GetContinueOnError() {
-			return exitCode, errors
+		fOut, fErr, err := runtime.Run(step)
+		fmt.Fprintf(os.Stdout, "Step stdout file: %s\n", fOut)
+		fmt.Fprintf(os.Stdout, "Step stderr file: %s\n", fErr)
+		if err != nil && !step.GetContinueOnError() {
+			return fmt.Errorf("step %s failed with: %w", step.GetName(), err)
 		}
 	}
 
-	return 0, []string{}
+	return nil
 }
 
 // NewFromFile creates Job instance from path to a YAML file.
 func NewFromFile(f string) (*Job, error) {
 	var j Job
-	b, err := ioutil.ReadFile(f)
+	b, err := os.ReadFile(f)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot read file %s: %w\n", f, err)
+		return nil, fmt.Errorf("cannot read file %s: %w\n", f, err)
 	}
 	err = yaml.Unmarshal(b, &j)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot unmarshal %s: %w\n", f, err)
+		return nil, fmt.Errorf("cannot unmarshal %s: %w\n", f, err)
 	}
 
 	newSteps := make([]step.IStep, 0)
@@ -68,17 +66,17 @@ func NewFromFile(f string) (*Job, error) {
 		step := s.(map[string]interface{})
 		typ, ok := step["type"].(string)
 		if !ok {
-			return nil, fmt.Errorf("Invalid type of step %d: %w\n", f, err)
+			return nil, fmt.Errorf("invalid type of step %d: %w\n", f, err)
 		}
 		if typ == "shellScript" {
 			var newStep shellscriptstep.ShellScriptStep
 			stepBytes, err := yaml.Marshal(s)
 			if err != nil {
-				return nil, fmt.Errorf("Error marshalling step %d: %w\n", i, err)
+				return nil, fmt.Errorf("error marshalling step %d: %w\n", i, err)
 			}
 			err = yaml.Unmarshal(stepBytes, &newStep)
 			if err != nil {
-				return nil, fmt.Errorf("Error unmarshalling marshalled step %d: %w\n", i, err)
+				return nil, fmt.Errorf("error unmarshalling marshalled step %d: %w\n", i, err)
 			}
 			newSteps = append(newSteps, &newStep)
 		}

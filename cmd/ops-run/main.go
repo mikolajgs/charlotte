@@ -34,16 +34,20 @@ func runJobHandler(c *gocli.CLI) int {
 	}
 
 	runenv := &localruntimeenvironment.LocalRuntimeEnvironment{}
-
-	exitError, errors := j.Run(runenv)
-	fmt.Fprintf(os.Stdout, "exitCode: %v\n", exitError)
-	fmt.Fprintf(os.Stdout, "errors: %v\n", errors)
+	err = j.Run(runenv)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Job %s failed locally with: %s\n", c.Flag("file"), err.Error())
+	} else {
+		fmt.Fprintf(os.Stdout, "Job %s succeeded locally\n", c.Flag("file"))
+	}
 
 	runenv2 := &dockerruntimeenvironment.DockerRuntimeEnvironment{}
-
-	exitError, errors = j.Run(runenv2)
-	fmt.Fprintf(os.Stdout, "exitCode: %v\n", exitError)
-	fmt.Fprintf(os.Stdout, "errors: %v\n", errors)
+	err = j.Run(runenv2)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Job %s failed in a docker with: %s\n", c.Flag("file"), err.Error())
+	} else {
+		fmt.Fprintf(os.Stdout, "Job %s succeeded in a docker\n", c.Flag("file"))
+	}
 
 	return 0
 }

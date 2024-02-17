@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -18,17 +17,17 @@ type DockerRuntimeEnvironment struct {
 	runtimeenvironment.RuntimeEnvironment
 }
 
-func (e *DockerRuntimeEnvironment) CreateDocker(fStep string, fOut string, fErr string) (string, error) {
+func (e *DockerRuntimeEnvironment) Create() error {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error creating docker client: %w", err)
 	}
 	defer cli.Close()
 
 	reader, err := cli.ImagePull(ctx, "docker.io/library/alpine", types.ImagePullOptions{})
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error pulling docker image: %w", err)
 	}
 	io.Copy(os.Stdout, reader)
 
@@ -37,26 +36,38 @@ func (e *DockerRuntimeEnvironment) CreateDocker(fStep string, fOut string, fErr 
 		Cmd:   []string{"echo", "hello world"},
 	}, nil, nil, nil, "")
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error creating docker container: %w", err)
 	}
 
-	/*cmd := exec.Command("docker", "container", "create", "-t", "-i", "alpine")
-	if err := cmd.Start(); err != nil {
-		return "", fmt.Errorf(fmt.Sprint("error starting cmd: %s", err.Error()))
-	}
-	if err := cmd.Wait(); err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			return "", fmt.Errorf(fmt.Sprint("exit code different than 0: %d", exiterr.ExitCode()))
-		} else {
-			return "", fmt.Errorf(fmt.Sprint("error waiting for cmd: %s", err.Error()))
-		}
-	}*/
-
-	return "id", nil
+	return nil
 }
 
-func (e *DockerRuntimeEnvironment) Run(step step.IStep) (int, []string, string, string) {
-	errCode, errStr, fStep, fOut, fErr := e.InitRunStep(step)
+func (e *DockerRuntimeEnvironment) Destroy() error {
+	return nil
+}
+
+/*func (e *DockerRuntimeEnvironment) CreateDocker(fStep string, fOut string, fErr string) error {
+	return nil
+}*/
+
+/*cmd := exec.Command("docker", "container", "create", "-t", "-i", "alpine")
+if err := cmd.Start(); err != nil {
+	return "", fmt.Errorf(fmt.Sprint("error starting cmd: %s", err.Error()))
+}
+if err := cmd.Wait(); err != nil {
+	if exiterr, ok := err.(*exec.ExitError); ok {
+		return "", fmt.Errorf(fmt.Sprint("exit code different than 0: %d", exiterr.ExitCode()))
+	} else {
+		return "", fmt.Errorf(fmt.Sprint("error waiting for cmd: %s", err.Error()))
+	}
+}*/
+
+/*return "id", nil
+}*/
+
+func (e *DockerRuntimeEnvironment) Run(step step.IStep) (string, string, error) {
+	return "", "", nil
+	/*errCode, errStr, fStep, fOut, fErr := e.InitRunStep(step)
 	if errCode != 0 {
 		return errCode, []string{errStr}, "", ""
 	}
@@ -91,5 +102,5 @@ func (e *DockerRuntimeEnvironment) Run(step step.IStep) (int, []string, string, 
 		}
 	}
 
-	return 0, []string{}, fOut.Name(), fErr.Name()
+	return 0, []string{}, fOut.Name(), fErr.Name()*/
 }

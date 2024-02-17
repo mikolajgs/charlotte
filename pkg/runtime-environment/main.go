@@ -3,6 +3,7 @@ package runtimeenvironment
 import (
 	"bufio"
 	"charlotte/pkg/step"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,54 +12,58 @@ import (
 )
 
 type IRuntimeEnvironment interface {
-	Run(step step.IStep) (int, []string, string, string)
+	Run(step step.IStep) (string, string, error)
+	Create() error
+	Destroy() error
 }
 
 type RuntimeEnvironment struct {
 }
 
 // InitRunStep will create three temporary files to store the script, write the stdout and write the stderr.
-func (r *RuntimeEnvironment) InitRunStep(step step.IStep) (int, string, *os.File, *os.File, *os.File) {
+func (r *RuntimeEnvironment) InitRunStep(step step.IStep) (*os.File, *os.File, *os.File, error) {
 	script := step.GetScript()
 	if script == "" {
-		return 101, "script is empty", nil, nil, nil
+		return nil, nil, nil, errors.New("script is empty")
 	}
 
 	fStep, err := os.CreateTemp("", "step.*.sh")
 	if err != nil {
-		return 103, fmt.Sprint("error creating tmp file for script: %s", err.Error()), nil, nil, nil
+		return nil, nil, nil, fmt.Errorf("error creating tmp file for script: %w", err)
 	}
 
 	if _, err := fStep.Write([]byte(script)); err != nil {
 		fStep.Close()
-		return 104, fmt.Sprint("error writing tmp file: %s", err.Error()), nil, nil, nil
+		return nil, nil, nil, fmt.Errorf("error writing tmp file: %w", err)
 	}
 
 	fOut, err := os.CreateTemp("", "stepout.*.txt")
 	if err != nil {
-		return 111, fmt.Sprint("error creating tmp file for stdout: %s", err.Error()), nil, nil, nil
+		return nil, nil, nil, fmt.Errorf("error creating tmp file for stdout: %w", err)
 	}
 
 	fErr, err := os.CreateTemp("", "steperr.*.txt")
 	if err != nil {
-		return 112, fmt.Sprint("error creating tmp file for stderr: %s", err.Error()), nil, nil, nil
+		return nil, nil, nil, fmt.Errorf("error creating tmp file for stderr: %w", err)
 	}
 
-	return 0, "", fStep, fOut, fErr
+	return fStep, fOut, fErr, nil
 }
 
 // CreateCmd creates and returns a command along with io.ReadCloser to attach stdout and stderr.
-func (r *RuntimeEnvironment) CreateCmd(name string, args ...string) (int, string, *exec.Cmd, io.ReadCloser, io.ReadCloser) {
+func (r *RuntimeEnvironment) CreateCmd(name string, args ...string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, error) {
 	cmd := exec.Command(name, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return 106, fmt.Sprintf("error piping stdout: %s", err.Error()), nil, nil, nil
+		return nil, nil, nil, fmt.Errorf("error piping stdout: %w", err)
 	}
+
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return 107, fmt.Sprintf("error piping stderr: %s", err.Error()), nil, nil, nil
+		return nil, nil, nil, fmt.Errorf("error piping stderr: %w", err)
 	}
-	return 0, "", cmd, stdout, stderr
+
+	return cmd, stdout, stderr, nil
 }
 
 // CreateWaitGroup creates WaitGroups that will pipe stdout and stderr to specific files.
