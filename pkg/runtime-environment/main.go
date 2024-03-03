@@ -1,14 +1,10 @@
 package runtimeenvironment
 
 import (
-	"bufio"
 	"charlotte/pkg/step"
 	"errors"
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
-	"sync"
 )
 
 type IRuntimeEnvironment interface {
@@ -48,43 +44,4 @@ func (r *RuntimeEnvironment) InitRunStep(step step.IStep) (*os.File, *os.File, *
 	}
 
 	return fStep, fOut, fErr, nil
-}
-
-// CreateCmd creates and returns a command along with io.ReadCloser to attach stdout and stderr.
-func (r *RuntimeEnvironment) CreateCmd(name string, args ...string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, error) {
-	cmd := exec.Command(name, args...)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("error piping stdout: %w", err)
-	}
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("error piping stderr: %w", err)
-	}
-
-	return cmd, stdout, stderr, nil
-}
-
-// CreateWaitGroup creates WaitGroups that will pipe stdout and stderr to specific files.
-func (r *RuntimeEnvironment) CreateWaitGroup(stdout io.ReadCloser, fOut *os.File, stderr io.ReadCloser, fErr *os.File) *sync.WaitGroup {
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
-	go func() {
-		scanner := bufio.NewScanner(stdout)
-		writer := io.MultiWriter(fOut, os.Stdout)
-		for scanner.Scan() {
-			fmt.Fprintln(writer, scanner.Text())
-		}
-		wg.Done()
-	}()
-	go func() {
-		scanner := bufio.NewScanner(stderr)
-		writer := io.MultiWriter(fOut, os.Stderr)
-		for scanner.Scan() {
-			fmt.Fprintln(writer, scanner.Text())
-		}
-		wg.Done()
-	}()
-	return wg
 }

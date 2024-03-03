@@ -4,14 +4,14 @@ steps:
   - type: shellScript
     name: Step 1
     description: Simple test step
-    continueOnError: false
+    continue_on_error: false
     script: |
       echo "hello world!";
 
   - type: shellScript
     name: Step 2
     description: Simple test step 2
-    continueOnError: true
+    continue_on_error: true
     script: |
       echo "I can count!";
       
@@ -32,7 +32,7 @@ steps:
   - type: shellScript
     name: Step 3
     description: Simple test step
-    continueOnError: false
+    continue_on_error: false
     script: |
       echo "Let's cat the file:";
       cat /tmp/my-tmp-file  

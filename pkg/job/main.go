@@ -54,11 +54,11 @@ func NewFromFile(f string) (*Job, error) {
 	var j Job
 	b, err := os.ReadFile(f)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read file %s: %w\n", f, err)
+		return nil, fmt.Errorf("cannot read file %s: %w", f, err)
 	}
 	err = yaml.Unmarshal(b, &j)
 	if err != nil {
-		return nil, fmt.Errorf("cannot unmarshal %s: %w\n", f, err)
+		return nil, fmt.Errorf("cannot unmarshal %s: %w", f, err)
 	}
 
 	newSteps := make([]step.IStep, 0)
@@ -66,17 +66,17 @@ func NewFromFile(f string) (*Job, error) {
 		step := s.(map[string]interface{})
 		typ, ok := step["type"].(string)
 		if !ok {
-			return nil, fmt.Errorf("invalid type of step %d: %w\n", f, err)
+			return nil, fmt.Errorf("invalid type of step %s: %w", f, err)
 		}
 		if typ == "shellScript" {
 			var newStep shellscriptstep.ShellScriptStep
 			stepBytes, err := yaml.Marshal(s)
 			if err != nil {
-				return nil, fmt.Errorf("error marshalling step %d: %w\n", i, err)
+				return nil, fmt.Errorf("error marshalling step %d: %w", i, err)
 			}
 			err = yaml.Unmarshal(stepBytes, &newStep)
 			if err != nil {
-				return nil, fmt.Errorf("error unmarshalling marshalled step %d: %w\n", i, err)
+				return nil, fmt.Errorf("error unmarshalling marshalled step %d: %w", i, err)
 			}
 			newSteps = append(newSteps, &newStep)
 		}

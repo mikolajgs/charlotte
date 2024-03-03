@@ -7,14 +7,20 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/stdcopy"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 type DockerRuntimeEnvironment struct {
 	runtimeenvironment.RuntimeEnvironment
+	containerId string
+	client      *client.Client
 }
 
 func (e *DockerRuntimeEnvironment) Create() error {
@@ -23,53 +29,58 @@ func (e *DockerRuntimeEnvironment) Create() error {
 	if err != nil {
 		return fmt.Errorf("error creating docker client: %w", err)
 	}
-	defer cli.Close()
+	e.client = cli
 
-	reader, err := cli.ImagePull(ctx, "docker.io/library/alpine", types.ImagePullOptions{})
+	reader, err := cli.ImagePull(ctx, "debian:bookworm-slim", types.ImagePullOptions{Platform: "linux/amd64"})
 	if err != nil {
 		return fmt.Errorf("error pulling docker image: %w", err)
 	}
 	io.Copy(os.Stdout, reader)
 
-	_, err = cli.ContainerCreate(ctx, &container.Config{
-		Image: "alpine",
-		Cmd:   []string{"echo", "hello world"},
-	}, nil, nil, nil, "")
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: "debian:bookworm-slim",
+		Cmd:   []string{"sleep", "600"},
+	}, nil, nil,
+		&ocispec.Platform{
+			Architecture: "amd64",
+			OS:           "linux",
+		},
+		"")
 	if err != nil {
-		return fmt.Errorf("error creating docker container: %w", err)
+		return fmt.Errorf("error creating docker: %w", err)
 	}
 
+	err = cli.ContainerStart(ctx, resp.ID, container.StartOptions{})
+	if err != nil {
+		return fmt.Errorf("error starting docker: %w", err)
+	}
+
+	e.containerId = resp.ID
 	return nil
 }
 
 func (e *DockerRuntimeEnvironment) Destroy() error {
-	return nil
-}
-
-/*func (e *DockerRuntimeEnvironment) CreateDocker(fStep string, fOut string, fErr string) error {
-	return nil
-}*/
-
-/*cmd := exec.Command("docker", "container", "create", "-t", "-i", "alpine")
-if err := cmd.Start(); err != nil {
-	return "", fmt.Errorf(fmt.Sprint("error starting cmd: %s", err.Error()))
-}
-if err := cmd.Wait(); err != nil {
-	if exiterr, ok := err.(*exec.ExitError); ok {
-		return "", fmt.Errorf(fmt.Sprint("exit code different than 0: %d", exiterr.ExitCode()))
-	} else {
-		return "", fmt.Errorf(fmt.Sprint("error waiting for cmd: %s", err.Error()))
+	ctx := context.Background()
+	err := e.client.ContainerRemove(ctx, e.containerId, container.RemoveOptions{
+		Force:         true,
+		RemoveLinks:   true,
+		RemoveVolumes: true,
+	})
+	if err != nil {
+		return fmt.Errorf("error removing docker: %w", err)
 	}
-}*/
 
-/*return "id", nil
-}*/
+	if e.client != nil {
+		e.client.Close()
+	}
+	return nil
+}
 
 func (e *DockerRuntimeEnvironment) Run(step step.IStep) (string, string, error) {
-	return "", "", nil
-	/*errCode, errStr, fStep, fOut, fErr := e.InitRunStep(step)
-	if errCode != 0 {
-		return errCode, []string{errStr}, "", ""
+	// fOut and fErr are io.File to stdout and stderr
+	fStep, fOut, fErr, err := e.InitRunStep(step)
+	if err != nil {
+		return "", "", fmt.Errorf("error initializing step: %w", err)
 	}
 
 	defer os.Remove(fStep.Name())
@@ -77,30 +88,49 @@ func (e *DockerRuntimeEnvironment) Run(step step.IStep) (string, string, error) 
 	defer fOut.Close()
 	defer fErr.Close()
 
-	_, err := e.CreateDocker(fStep.Name(), fOut.Name(), fErr.Name())
+	ctx := context.Background()
+
+	fStepArchive, err := archive.Tar(fStep.Name(), archive.Gzip)
 	if err != nil {
-		return 110, []string{fmt.Sprintf("error creating docker container: %s", err.Error())}, "", ""
+		return "", "", fmt.Errorf("error making tar: %w", err)
 	}
 
-	errCode, errStr, cmd, stdout, stderr := e.CreateCmd("bash", fStep.Name())
-	if errCode != 0 {
-		return errCode, []string{errStr}, "", ""
+	err = e.client.CopyToContainer(ctx, e.containerId, "/tmp/", fStepArchive, types.CopyToContainerOptions{
+		AllowOverwriteDirWithFile: true,
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("error copying step script to docker container: %w", err)
 	}
 
-	if err := cmd.Start(); err != nil {
-		return 108, []string{fmt.Sprint("error starting cmd: %s", err.Error())}, "", ""
+	execConfig := types.ExecConfig{
+		Cmd:          []string{"bash", fmt.Sprintf("/tmp/%s", filepath.Base(fStep.Name()))},
+		AttachStdout: true,
+		AttachStderr: true,
+	}
+	execID, err := e.client.ContainerExecCreate(ctx, e.containerId, execConfig)
+	if err != nil {
+		return "", "", fmt.Errorf("error running bash with step: %w", err)
 	}
 
-	wg := e.CreateWaitGroup(stdout, fOut, stderr, fErr)
-	wg.Wait()
+	resp, err := e.client.ContainerExecAttach(ctx, execID.ID, types.ExecStartCheck{})
+	if err != nil {
+		return "", "", fmt.Errorf("error attaching to exec: %w", err)
+	}
+	defer resp.Close()
 
-	if err := cmd.Wait(); err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			return exiterr.ExitCode(), []string{"exit code different than 0"}, fOut.Name(), fErr.Name()
-		} else {
-			return 109, []string{fmt.Sprint("error waiting for cmd: %s", err.Error())}, "", ""
-		}
+	_, err = stdcopy.StdCopy(fOut, fErr, resp.Reader)
+	if err != nil {
+		return "", "", fmt.Errorf("error getting stdout and stderr: %w", err)
 	}
 
-	return 0, []string{}, fOut.Name(), fErr.Name()*/
+	inspectedExec, err := e.client.ContainerExecInspect(ctx, execID.ID)
+	if err != nil {
+		return "", "", fmt.Errorf("error inspecting exec: %w", err)
+	}
+
+	if inspectedExec.ExitCode != 0 {
+		return fOut.Name(), fErr.Name(), fmt.Errorf("command returns exit code %d", inspectedExec.ExitCode)
+	}
+
+	return fOut.Name(), fErr.Name(), nil
 }
