@@ -4,6 +4,7 @@ import (
 	"charlotte/pkg/job"
 	dockerruntimeenvironment "charlotte/pkg/runtime-environment/docker"
 	localruntimeenvironment "charlotte/pkg/runtime-environment/local"
+	kubernetesruntimeenvironment "charlotte/pkg/runtime/environment/kubernetes"
 	"fmt"
 	"os"
 
@@ -47,6 +48,14 @@ func runJobHandler(c *gocli.CLI) int {
 		fmt.Fprintf(os.Stderr, "Job %s failed in a docker with: %s\n", c.Flag("file"), err.Error())
 	} else {
 		fmt.Fprintf(os.Stdout, "Job %s succeeded in a docker\n", c.Flag("file"))
+	}
+
+	runenv3 := &kubernetesruntimeenvironment.KubernetesRuntimeEnvironment{}
+	err = j.Run(runenv3)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Job %s failed in kubernetes with: %s\n", c.Flag("file"), err.Error())
+	} else {
+		fmt.Fprintf(os.Stdout, "Job %s succeeded in kubernetes\n", c.Flag("file"))
 	}
 
 	return 0
