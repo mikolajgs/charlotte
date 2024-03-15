@@ -3,33 +3,66 @@ package kubernetesruntimeenvironment
 import (
 	runtimeenvironment "charlotte/pkg/runtime-environment"
 	"charlotte/pkg/step"
+	"context"
 	"fmt"
 	"os"
 
-	"k8s.io/client-go/kubernetes/clientset"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
+
+const DEFAULT_NAMESPACE = "charlotte"
 
 type KubernetesRuntimeEnvironment struct {
 	runtimeenvironment.RuntimeEnvironment
 	namespace string
 	config    *rest.Config
-	clientSet *clientset.Clientset
+	clientSet *kubernetes.Clientset
 }
 
 func (e *KubernetesRuntimeEnvironment) Create() error {
-	e.config, err = rest.InClusterConfig()
+	config, err := rest.InClusterConfig()
 	if err != nil {
 		return fmt.Errorf("error building incluster config: %w", err)
 	}
+	e.config = config
 
-	e.clientSet, err := clientset.NewForConfig(e.config)
+	clientSet, err := kubernetes.NewForConfig(e.config)
 	if err != nil {
 		return fmt.Errorf("error building kubernetes clientset: %w", err)
 	}
+	e.clientSet = clientSet
 
-	// if namespace does not exist, it has to be created
-	// and use some default name to it
+	if e.namespace != "" {
+		e.namespace = DEFAULT_NAMESPACE
+	}
+
+	// Get the list of namespaces
+	namespaces, err := e.clientSet.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("error getting namespaces: %w", err)
+	}
+
+	found := false
+	for _, namespace := range namespaces.Items {
+		if namespace.Name == DEFAULT_NAMESPACE {
+			found = true
+		}
+	}
+
+	if !found {
+		namespace := &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: DEFAULT_NAMESPACE,
+			},
+		}
+		_, err = e.clientSet.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("error creating namespace '%s': %w", DEFAULT_NAMESPACE, err)
+		}
+	}
 
 	return nil
 }

@@ -3,8 +3,8 @@ package main
 import (
 	"charlotte/pkg/job"
 	dockerruntimeenvironment "charlotte/pkg/runtime-environment/docker"
+	kubernetesruntimeenvironment "charlotte/pkg/runtime-environment/kubernetes"
 	localruntimeenvironment "charlotte/pkg/runtime-environment/local"
-	kubernetesruntimeenvironment "charlotte/pkg/runtime/environment/kubernetes"
 	"fmt"
 	"os"
 
