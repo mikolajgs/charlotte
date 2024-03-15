@@ -50,7 +50,10 @@ func runJobHandler(c *gocli.CLI) int {
 		fmt.Fprintf(os.Stdout, "Job %s succeeded in a docker\n", c.Flag("file"))
 	}
 
-	runenv3 := &kubernetesruntimeenvironment.KubernetesRuntimeEnvironment{}
+	runenv3 := &kubernetesruntimeenvironment.KubernetesRuntimeEnvironment{
+		InCluster:      false,
+		KubeconfigPath: "/Users/nicholas/.kube/config",
+	}
 	err = j.Run(runenv3)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Job %s failed in kubernetes with: %s\n", c.Flag("file"), err.Error())
