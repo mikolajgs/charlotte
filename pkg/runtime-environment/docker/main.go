@@ -17,6 +17,8 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
+const DOCKER_IMAGE = "mikogs/charlotte:0.1.0"
+
 type DockerRuntimeEnvironment struct {
 	runtimeenvironment.RuntimeEnvironment
 	containerId string
@@ -31,14 +33,14 @@ func (e *DockerRuntimeEnvironment) Create() error {
 	}
 	e.client = cli
 
-	reader, err := cli.ImagePull(ctx, "debian:bookworm-slim", types.ImagePullOptions{Platform: "linux/amd64"})
+	reader, err := cli.ImagePull(ctx, DOCKER_IMAGE, types.ImagePullOptions{Platform: "linux/amd64"})
 	if err != nil {
 		return fmt.Errorf("error pulling docker image: %w", err)
 	}
 	io.Copy(os.Stdout, reader)
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: "debian:bookworm-slim",
+		Image: DOCKER_IMAGE,
 		Cmd:   []string{"sleep", "600"},
 	}, nil, nil,
 		&ocispec.Platform{

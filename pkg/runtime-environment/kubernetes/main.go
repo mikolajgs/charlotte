@@ -21,6 +21,7 @@ import (
 )
 
 const DEFAULT_NAMESPACE = "charlotte"
+const DOCKER_IMAGE = "mikogs/charlotte:0.1.0"
 
 type KubernetesRuntimeEnvironment struct {
 	runtimeenvironment.RuntimeEnvironment
@@ -93,7 +94,7 @@ func (e *KubernetesRuntimeEnvironment) Create() error {
 			Containers: []v1.Container{
 				{
 					Name:    "charlotte-container",
-					Image:   "debian:bookworm-slim",
+					Image:   DOCKER_IMAGE,
 					Command: []string{"sleep", "600"},
 				},
 			},
@@ -154,8 +155,11 @@ func (e *KubernetesRuntimeEnvironment) Run(step step.IStep) (string, string, err
 		Name("charlotte-pod").
 		Namespace(DEFAULT_NAMESPACE).
 		SubResource("exec").
-		Param("command", "echo").
-		Param("command", "aaaa").
+		Param("command", "tar").
+		Param("command", "xf").
+		Param("command", "-").
+		Param("command", "-C").
+		Param("command", destPath).
 		Param("stdin", "true").
 		Param("stdout", "true").
 		Param("stderr", "true").
@@ -196,6 +200,8 @@ func (e *KubernetesRuntimeEnvironment) Run(step step.IStep) (string, string, err
 		Stderr: &stderr,
 	})
 	if err != nil {
+		fmt.Printf("STDOUT: %s\n", stdout.String())
+		fmt.Printf("STDERR: %s\n", stderr.String())
 		return "", "", fmt.Errorf("error executing command in pod: %w", err)
 	}
 
