@@ -1,15 +1,13 @@
 package kubernetesruntimeenvironment
 
 import (
-	"archive/tar"
 	"bytes"
 	runtimeenvironment "charlotte/pkg/runtime-environment"
 	"charlotte/pkg/step"
 	"context"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
+	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -32,7 +30,7 @@ type KubernetesRuntimeEnvironment struct {
 	KubeconfigPath string
 }
 
-func (e *KubernetesRuntimeEnvironment) Create() error {
+func (e *KubernetesRuntimeEnvironment) Create(steps []step.IStep) error {
 	var config *rest.Config
 	var err error
 	if e.InCluster {
@@ -86,6 +84,24 @@ func (e *KubernetesRuntimeEnvironment) Create() error {
 		}
 	}
 
+	// Create a ConfigMap with all the step scripts
+	configMapData := map[string]string{}
+	for i, step := range steps {
+		configMapData[fmt.Sprintf("script-%d.sh", i)] = step.GetScript()
+	}
+	configMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "charlotte-cm",
+		},
+		Data: configMapData,
+	}
+
+	_, err = e.clientSet.CoreV1().ConfigMaps(DEFAULT_NAMESPACE).Create(context.TODO(), configMap, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create configmap: %w", err)
+	}
+
+	// Create a pod with configmap attached to it
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "charlotte-pod",
@@ -96,6 +112,24 @@ func (e *KubernetesRuntimeEnvironment) Create() error {
 					Name:    "charlotte-container",
 					Image:   DOCKER_IMAGE,
 					Command: []string{"sleep", "600"},
+					VolumeMounts: []v1.VolumeMount{
+						{
+							Name:      "charlotte-scripts",
+							MountPath: "/tmp/charlotte-cm",
+						},
+					},
+				},
+			},
+			Volumes: []v1.Volume{
+				{
+					Name: "charlotte-scripts",
+					VolumeSource: v1.VolumeSource{
+						ConfigMap: &v1.ConfigMapVolumeSource{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "charlotte-cm",
+							},
+						},
+					},
 				},
 			},
 		},
@@ -111,91 +145,49 @@ func (e *KubernetesRuntimeEnvironment) Create() error {
 	return nil
 }
 
-func (e *KubernetesRuntimeEnvironment) Destroy() error {
+func (e *KubernetesRuntimeEnvironment) Destroy(steps []step.IStep) error {
 	return nil
 }
 
-func (e *KubernetesRuntimeEnvironment) Run(step step.IStep) (string, string, error) {
+func (e *KubernetesRuntimeEnvironment) Run(step step.IStep, stepNumber int) (string, string, error) {
 	// fOut and fErr are io.File to stdout and stderr
-	fStep, fOut, fErr, err := e.InitRunStep(step)
+	fOut, fErr, err := e.InitStepOutputs(step)
 	if err != nil {
-		return "", "", fmt.Errorf("error initializing step: %w", err)
+		return "", "", fmt.Errorf("error initializing step outputs: %w", err)
 	}
-
-	defer os.Remove(fStep.Name())
-	defer fStep.Close()
 	defer fOut.Close()
 	defer fErr.Close()
 
 	ctx := context.Background()
 
-	filePath := fStep.Name()
-	destPath := fmt.Sprintf("/tmp/%s", filepath.Base(fStep.Name()))
-	fileContents, err := io.ReadAll(fStep)
-	if err != nil {
-		return "", "", fmt.Errorf("error reading step script: %w", err)
-	}
-	fileInfo, err := os.Stat(filePath)
-	if err != nil {
-		return "", "", fmt.Errorf("error getting fileinfo for step script: %w", err)
-	}
-
-	tarFileName := fmt.Sprintf("%s.tar", fStep.Name())
-	tarFile, err := os.Create(tarFileName)
-	if err != nil {
-		return "", "", fmt.Errorf("failed to create tar file: %w", err)
-	}
-	defer tarFile.Close()
-
-	// Prepare the tar command to run in the pod
-	command := []string{"tar", "xf", "-", "-C", destPath}
+	command := []string{"bash", fmt.Sprintf("/tmp/charlotte-cm/script-%d.sh", stepNumber)}
 	req := e.clientSet.CoreV1().RESTClient().
 		Post().
 		Resource("pods").
 		Name("charlotte-pod").
 		Namespace(DEFAULT_NAMESPACE).
 		SubResource("exec").
-		Param("command", "tar").
-		Param("command", "xf").
-		Param("command", "-").
-		Param("command", "-C").
-		Param("command", destPath).
-		Param("stdin", "true").
+		Param("command", "echo").
+		Param("stdin", "false").
 		Param("stdout", "true").
 		Param("stderr", "true").
 		VersionedParams(&v1.PodExecOptions{
 			Command: command,
-			Stdin:   true,
+			Stdin:   false,
 			Stdout:  true,
 			Stderr:  true,
 		}, metav1.ParameterCodec)
+
+	fmt.Fprintf(os.Stdout, "%v", req.URL())
 
 	executor, err := remotecommand.NewSPDYExecutor(e.config, "POST", req.URL())
 	if err != nil {
 		return "", "", fmt.Errorf("error creating executor: %w", err)
 	}
 
-	header := &tar.Header{
-		Name: fileInfo.Name(),
-		Mode: int64(fileInfo.Mode()),
-		Size: fileInfo.Size(),
-	}
-
-	tw := tar.NewWriter(tarFile)
-	defer tw.Close()
-
-	if err := tw.WriteHeader(header); err != nil {
-		return "", "", fmt.Errorf("error creating tar writer: %w", err)
-	}
-
-	if _, err := tw.Write(fileContents); err != nil {
-		return "", "", fmt.Errorf("error creating tar archive: %w", err)
-	}
-
-	// Execute the command in the pod
 	var stdout, stderr bytes.Buffer
 	err = executor.StreamWithContext(ctx, remotecommand.StreamOptions{
-		Stdin:  tarFile,
+		Stdin:  strings.NewReader(""),
 		Stdout: &stdout,
 		Stderr: &stderr,
 	})

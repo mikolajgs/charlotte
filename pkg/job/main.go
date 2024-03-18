@@ -30,15 +30,15 @@ func (j *Job) Validate() (bool, map[string]int) {
 // Run executes a Step in a specific RuntimeEnvironment.
 func (j *Job) Run(runtime runtimeenvironment.IRuntimeEnvironment) error {
 
-	err := runtime.Create()
+	err := runtime.Create(j.Steps.([]step.IStep))
 	if err != nil {
 		return fmt.Errorf("error creating docker: %w", err)
 	}
 
-	defer runtime.Destroy()
+	defer runtime.Destroy(j.Steps.([]step.IStep))
 
-	for _, step := range j.Steps.([]step.IStep) {
-		fOut, fErr, err := runtime.Run(step)
+	for i, step := range j.Steps.([]step.IStep) {
+		fOut, fErr, err := runtime.Run(step, i)
 		fmt.Fprintf(os.Stdout, "Step stdout file: %s\n", fOut)
 		fmt.Fprintf(os.Stdout, "Step stderr file: %s\n", fErr)
 		if err != nil && !step.GetContinueOnError() {

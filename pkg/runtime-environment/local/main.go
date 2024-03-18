@@ -15,24 +15,30 @@ type LocalRuntimeEnvironment struct {
 	runtimeenvironment.RuntimeEnvironment
 }
 
-func (e *LocalRuntimeEnvironment) Create() error {
+func (e *LocalRuntimeEnvironment) Create(steps []step.IStep) error {
 	return nil
 }
 
-func (c *LocalRuntimeEnvironment) Destroy() error {
+func (c *LocalRuntimeEnvironment) Destroy(steps []step.IStep) error {
 	return nil
 }
 
 // Run runs a Step and returns error code, error string, path to file containing stdout and path to file containing stderr.
-func (e *LocalRuntimeEnvironment) Run(step step.IStep) (string, string, error) {
+func (e *LocalRuntimeEnvironment) Run(step step.IStep, stepNumber int) (string, string, error) {
 	if _, err := exec.LookPath("bash"); err != nil {
 		return "", "", fmt.Errorf("command bash not found: %w", err)
 	}
 
-	// fOut and fErr are io.File to stdout and stderr
-	fStep, fOut, fErr, err := e.InitRunStep(step)
+	// fStep is io.File with contents of the script
+	fStep, err := e.InitStepScript(step)
 	if err != nil {
-		return "", "", fmt.Errorf("error initializing step: %w", err)
+		return "", "", fmt.Errorf("error initializing step script: %w", err)
+	}
+
+	// fOut and fErr are io.File to stdout and stderr
+	fOut, fErr, err := e.InitStepOutputs(step)
+	if err != nil {
+		return "", "", fmt.Errorf("error initializing step outputs: %w", err)
 	}
 
 	defer os.Remove(fStep.Name())

@@ -25,7 +25,7 @@ type DockerRuntimeEnvironment struct {
 	client      *client.Client
 }
 
-func (e *DockerRuntimeEnvironment) Create() error {
+func (e *DockerRuntimeEnvironment) Create(steps []step.IStep) error {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -61,7 +61,7 @@ func (e *DockerRuntimeEnvironment) Create() error {
 	return nil
 }
 
-func (e *DockerRuntimeEnvironment) Destroy() error {
+func (e *DockerRuntimeEnvironment) Destroy(steps []step.IStep) error {
 	ctx := context.Background()
 	err := e.client.ContainerRemove(ctx, e.containerId, container.RemoveOptions{
 		Force:         true,
@@ -78,11 +78,17 @@ func (e *DockerRuntimeEnvironment) Destroy() error {
 	return nil
 }
 
-func (e *DockerRuntimeEnvironment) Run(step step.IStep) (string, string, error) {
+func (e *DockerRuntimeEnvironment) Run(step step.IStep, stepNumber int) (string, string, error) {
 	// fOut and fErr are io.File to stdout and stderr
-	fStep, fOut, fErr, err := e.InitRunStep(step)
+	fStep, err := e.InitStepScript(step)
 	if err != nil {
-		return "", "", fmt.Errorf("error initializing step: %w", err)
+		return "", "", fmt.Errorf("error initializing step script: %w", err)
+	}
+
+	// fOut and fErr are io.File to stdout and stderr
+	fOut, fErr, err := e.InitStepOutputs(step)
+	if err != nil {
+		return "", "", fmt.Errorf("error initializing step outputs: %w", err)
 	}
 
 	defer os.Remove(fStep.Name())
