@@ -63,9 +63,13 @@ func (e *DockerRuntimeEnvironment) Create(steps []step.IStep) error {
 
 func (e *DockerRuntimeEnvironment) Destroy(steps []step.IStep) error {
 	ctx := context.Background()
+
+	if err := e.client.ContainerStop(ctx, e.containerId, container.StopOptions{}); err != nil {
+		return fmt.Errorf("error stopping docker: %w", err)
+	}
+
 	err := e.client.ContainerRemove(ctx, e.containerId, container.RemoveOptions{
 		Force:         true,
-		RemoveLinks:   true,
 		RemoveVolumes: true,
 	})
 	if err != nil {
