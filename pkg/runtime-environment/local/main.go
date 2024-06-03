@@ -101,7 +101,7 @@ func (e *LocalRuntimeEnvironment) CreateWaitGroup(stdout io.ReadCloser, fOut *os
 	}()
 	go func() {
 		scanner := bufio.NewScanner(stderr)
-		writer := io.MultiWriter(fOut, os.Stderr)
+		writer := io.MultiWriter(fErr, os.Stderr)
 		for scanner.Scan() {
 			fmt.Fprintln(writer, scanner.Text())
 		}

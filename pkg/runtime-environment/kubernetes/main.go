@@ -1,14 +1,14 @@
 package kubernetesruntimeenvironment
 
 import (
-	"bytes"
 	runtimeenvironment "charlotte/pkg/runtime-environment"
 	"charlotte/pkg/step"
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"time"
+	"strings"
+	"bytes"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/kubectl/pkg/scheme"
 )
 
 const DEFAULT_NAMESPACE = "charlotte"
@@ -167,16 +168,14 @@ func (e *KubernetesRuntimeEnvironment) Run(step step.IStep, stepNumber int) (str
 		Name("charlotte-pod").
 		Namespace(DEFAULT_NAMESPACE).
 		SubResource("exec").
-		Param("command", "echo").
-		Param("stdin", "false").
-		Param("stdout", "true").
-		Param("stderr", "true").
 		VersionedParams(&v1.PodExecOptions{
 			Command: command,
+			Container: "charlotte-container",
 			Stdin:   false,
 			Stdout:  true,
 			Stderr:  true,
-		}, metav1.ParameterCodec)
+			TTY: false,
+		}, scheme.ParameterCodec)
 
 	fmt.Fprintf(os.Stdout, "%v", req.URL())
 
@@ -190,6 +189,7 @@ func (e *KubernetesRuntimeEnvironment) Run(step step.IStep, stepNumber int) (str
 		Stdin:  strings.NewReader(""),
 		Stdout: &stdout,
 		Stderr: &stderr,
+		Tty: false,
 	})
 	if err != nil {
 		fmt.Printf("STDOUT: %s\n", stdout.String())

@@ -39,8 +39,8 @@ func (j *Job) Run(runtime runtimeenvironment.IRuntimeEnvironment) error {
 
 	for i, step := range j.Steps.([]step.IStep) {
 		fOut, fErr, err := runtime.Run(step, i)
-		fmt.Fprintf(os.Stdout, "Step stdout file: %s\n", fOut)
-		fmt.Fprintf(os.Stdout, "Step stderr file: %s\n", fErr)
+		fmt.Fprintf(os.Stdout, "*** Step stdout file: %s\n", fOut)
+		fmt.Fprintf(os.Stdout, "*** Step stderr file: %s\n", fErr)
 		if err != nil && !step.GetContinueOnError() {
 			return fmt.Errorf("step %s failed with: %w", step.GetName(), err)
 		}
