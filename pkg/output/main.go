@@ -1,7 +1,7 @@
 package output
 
 import (
-	"github.com/mikogs/go-valifieldator"
+	structvalidator "github.com/nicholasgasior/struct-validator"
 	_ "gopkg.in/yaml.v2"
 )
 
@@ -12,6 +12,6 @@ type Output struct {
 }
 
 func (o *Output) Validate() (bool, map[string]int) {
-	isValid, failedFields := valifieldator.Validate(o, &valifieldator.ValidationOptions{})
+	isValid, failedFields := structvalidator.Validate(o, &structvalidator.ValidationOptions{})
 	return isValid, failedFields
 }

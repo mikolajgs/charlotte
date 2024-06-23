@@ -2,13 +2,11 @@ package main
 
 import (
 	"charlotte/pkg/job"
-	dockerruntimeenvironment "charlotte/pkg/runtime-environment/docker"
 	kubernetesruntimeenvironment "charlotte/pkg/runtime-environment/kubernetes"
-	localruntimeenvironment "charlotte/pkg/runtime-environment/local"
 	"fmt"
 	"os"
 
-	gocli "github.com/mikogs/go-broccli/v2"
+	gocli "github.com/nicholasgasior/go-broccli"
 )
 
 func main() {
@@ -34,21 +32,21 @@ func runJobHandler(c *gocli.CLI) int {
 		return 1
 	}
 
-	runenv := &localruntimeenvironment.LocalRuntimeEnvironment{}
-	err = j.Run(runenv)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Job %s failed locally with: %s\n", c.Flag("file"), err.Error())
-	} else {
-		fmt.Fprintf(os.Stdout, "Job %s succeeded locally\n", c.Flag("file"))
-	}
-
-	runenv2 := &dockerruntimeenvironment.DockerRuntimeEnvironment{}
-	err = j.Run(runenv2)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Job %s failed in a docker with: %s\n", c.Flag("file"), err.Error())
-	} else {
-		fmt.Fprintf(os.Stdout, "Job %s succeeded in a docker\n", c.Flag("file"))
-	}
+//	runenv := &localruntimeenvironment.LocalRuntimeEnvironment{}
+//	err = j.Run(runenv)
+//	if err != nil {
+//		fmt.Fprintf(os.Stderr, "Job %s failed locally with: %s\n", c.Flag("file"), err.Error())
+//	} else {
+//		fmt.Fprintf(os.Stdout, "Job %s succeeded locally\n", c.Flag("file"))
+//	}
+//
+//	runenv2 := &dockerruntimeenvironment.DockerRuntimeEnvironment{}
+//	err = j.Run(runenv2)
+//	if err != nil {
+//		fmt.Fprintf(os.Stderr, "Job %s failed in a docker with: %s\n", c.Flag("file"), err.Error())
+//	} else {
+//		fmt.Fprintf(os.Stdout, "Job %s succeeded in a docker\n", c.Flag("file"))
+//	}
 
 	runenv3 := &kubernetesruntimeenvironment.KubernetesRuntimeEnvironment{
 		InCluster:      false,

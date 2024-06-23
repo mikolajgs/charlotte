@@ -1,7 +1,7 @@
 package input
 
 import (
-	"github.com/mikogs/go-valifieldator"
+	structvalidator "github.com/nicholasgasior/struct-validator"
 	_ "gopkg.in/yaml.v2"
 )
 
@@ -13,6 +13,6 @@ type Input struct {
 }
 
 func (i *Input) Validate() (bool, map[string]int) {
-	isValid, failedFields := valifieldator.Validate(i, &valifieldator.ValidationOptions{})
+	isValid, failedFields := structvalidator.Validate(i, &structvalidator.ValidationOptions{})
 	return isValid, failedFields
 }

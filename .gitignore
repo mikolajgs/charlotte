@@ -22,4 +22,4 @@ go.work
 
 # Compiled binaries
 /cmd/ops-run/ops-run
-
+/cmd/job/job

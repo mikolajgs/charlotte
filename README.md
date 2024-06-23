@@ -33,9 +33,6 @@ if we have to write 50 or so of these guys.
 ## TODO
 
 ### Phase 0.1 - bash script blocks only
-#### 0.1.1 run them locally
-#### 0.1.2 spin a docker container and run inside
-#### 0.1.3 spin a pod in a kubernetes cluster
 #### 0.1.4 pipe stdout and stderr properly
 #### 0.1.5 add outputs
 #### 0.1.6 add inputs
@@ -44,4 +41,4 @@ if we have to write 50 or so of these guys.
 ...
 ### Phase 0.3 - master <-?-> master (worker) <-> worker
 ...
-
+### Phase 0.4 - logging

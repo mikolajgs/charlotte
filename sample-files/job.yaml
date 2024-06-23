@@ -9,31 +9,31 @@ steps:
       echo ">>> STEP1: Standard Output Message";
       >&2 echo ">>> STEP1: Standard Error Message";
 
-  #- type: shellScript
-  #  name: Step 2
-  #  description: Simple test step 2
-  #  continue_on_error: true
-  #  script: |
-  #    echo "STEP2: I can count!";
-  #    
-  #    for i in 1 2 3 4 5; do
-  #      echo "STEP2: $i";
-  #      sleep 2;
-  #    done
-  #    
-  #    echo "Hello there!";
-  #    
-  #    cat >> /tmp/my-tmp-file <<EOF
-  #    Oh, just testing the heredoc
-  #    EOF
-  #    
-  #    echo "STEP2: Actually, I wanted to test multiple line bash script"
-  #    exit 124;
+  - type: shellScript
+    name: Step 2
+    description: Simple test step 2
+    continue_on_error: true
+    script: |
+      echo "STEP2: I can count!";
+      
+      for i in 1 2 3 4 5; do
+        echo "STEP2: $i";
+        sleep 2;
+      done
+      
+      echo "Hello there!";
+      
+      cat >> /tmp/my-tmp-file <<EOF
+      Oh, just testing the heredoc
+      EOF
+      
+      echo "STEP2: Actually, I wanted to test multiple line bash script"
+      exit 124;
 
-  #- type: shellScript
-  #  name: Step 3
-  #  description: Simple test step
-  #  continue_on_error: false
-  #  script: |
-  #    echo "STEP3: Let's cat the file:";
-  #    cat /tmp/my-tmp-file  
+  - type: shellScript
+    name: Step 3
+    description: Simple test step
+    continue_on_error: false
+    script: |
+      echo "STEP3: Let's cat the file:";
+      cat /tmp/my-tmp-file  
