@@ -1,8 +1,8 @@
-package localruntimeenvironment
+package localruntime
 
 import (
 	"bufio"
-	runtimeenvironment "charlotte/pkg/runtime-environment"
+	runtime "charlotte/pkg/runtime"
 	"charlotte/pkg/step"
 	"fmt"
 	"io"
@@ -11,20 +11,20 @@ import (
 	"sync"
 )
 
-type LocalRuntimeEnvironment struct {
-	runtimeenvironment.RuntimeEnvironment
+type LocalRuntime struct {
+	runtime.Runtime
 }
 
-func (e *LocalRuntimeEnvironment) Create(steps []step.IStep) error {
+func (e *LocalRuntime) Create(steps []step.IStep) error {
 	return nil
 }
 
-func (c *LocalRuntimeEnvironment) Destroy(steps []step.IStep) error {
+func (c *LocalRuntime) Destroy(steps []step.IStep) error {
 	return nil
 }
 
 // Run runs a Step and returns error code, error string, path to file containing stdout and path to file containing stderr.
-func (e *LocalRuntimeEnvironment) Run(step step.IStep, stepNumber int) (string, string, error) {
+func (e *LocalRuntime) Run(step step.IStep, stepNumber int) (string, string, error) {
 	if _, err := exec.LookPath("bash"); err != nil {
 		return "", "", fmt.Errorf("command bash not found: %w", err)
 	}
@@ -72,7 +72,7 @@ func (e *LocalRuntimeEnvironment) Run(step step.IStep, stepNumber int) (string, 
 }
 
 // CreateCmd creates and returns a command along with io.ReadCloser to attach stdout and stderr.
-func (e *LocalRuntimeEnvironment) CreateCmd(name string, args ...string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, error) {
+func (e *LocalRuntime) CreateCmd(name string, args ...string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, error) {
 	cmd := exec.Command(name, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -88,7 +88,7 @@ func (e *LocalRuntimeEnvironment) CreateCmd(name string, args ...string) (*exec.
 }
 
 // CreateWaitGroup creates WaitGroups that will pipe stdout and stderr to specific files.
-func (e *LocalRuntimeEnvironment) CreateWaitGroup(stdout io.ReadCloser, fOut *os.File, stderr io.ReadCloser, fErr *os.File) *sync.WaitGroup {
+func (e *LocalRuntime) CreateWaitGroup(stdout io.ReadCloser, fOut *os.File, stderr io.ReadCloser, fErr *os.File) *sync.WaitGroup {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	go func() {

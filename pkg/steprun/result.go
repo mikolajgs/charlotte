@@ -1,4 +1,4 @@
-package jobrunresult
+package steprun
 
 type StepRunResult struct {
 	Success bool

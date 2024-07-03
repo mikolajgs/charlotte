@@ -1,4 +1,4 @@
-package localruntimeenvironment
+package localruntime
 
 import (
 	"bytes"
@@ -8,10 +8,10 @@ import (
 	"testing"
 )
 
-var testOutputFilesJob = `name: Test
+var testStdFilesJob = `name: Test
 description: Workflow with bash script steps
 steps:
-  - type: shellScript
+  - type: shell
     name: Step 1
     description: Simple test step
     continue_on_error: false
@@ -21,14 +21,14 @@ steps:
 
 `
 
-func TestStdoutAndStdErr(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testOutputFilesJob))
+func TestStdoutAndStderr(t *testing.T) {
+	j, err := job.NewFromBytes([]byte(testStdFilesJob))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	runenv := &LocalRuntimeEnvironment{}
-	jobRunResult := j.Run(runenv)
+	runenv := &LocalRuntime{}
+	jobRunResult := j.Run(runenv, nil)
 	if jobRunResult.Error != nil {
 		log.Fatal(err)
 	}

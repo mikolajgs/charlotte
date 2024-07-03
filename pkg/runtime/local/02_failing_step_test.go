@@ -1,4 +1,4 @@
-package localruntimeenvironment
+package localruntime
 
 import (
 	"charlotte/pkg/job"
@@ -6,20 +6,18 @@ import (
 	"testing"
 )
 
-var testContinueOnErrorJob = `name: Test
+var testFailingJob = `name: Test
 description: Workflow with bash script steps
 steps:
-  - type: shellScript
+  - type: shell
     name: Step 1
     description: Simple test step
-    continue_on_error: false
     script: |
       echo "Do nothing in Step 1";
 
-  - type: shellScript
+  - type: shell
     name: Step 2
-    description: This step fails but job should continue
-    continue_on_error: true
+    description: This step fails and it should not continue further
     script: |
       for i in 1 2 3 4 5; do
         echo -n "Step 2.$i;"
@@ -30,7 +28,7 @@ steps:
 
       echo -n "Step 2.6;"
 
-  - type: shellScript
+  - type: shell
     name: Step 3
     description: This step should run
     script: |
@@ -38,27 +36,26 @@ steps:
       echo "Step 3 stdout";
 `
 
-func TestContinueOnError(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testContinueOnErrorJob))
+func TestFailingStep(t *testing.T) {
+	j, err := job.NewFromBytes([]byte(testFailingJob))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	runenv := &LocalRuntimeEnvironment{}
-	jobRunResult := j.Run(runenv)
-	if jobRunResult.Error != nil {
-		log.Fatal(err)
+	runenv := &LocalRuntime{}
+	jobRunResult := j.Run(runenv, nil)
+	if jobRunResult.Error == nil {
+		t.Errorf("job run should fail with error")
 	}
 
-	// Check step 3 stderr and stdout
-	if len(jobRunResult.StepRunResults) != 3 {
+	// There should be only 2 steps
+	if len(jobRunResult.StepRunResults) != 2 {
 		t.Errorf("invalid number of step run results")
 	}
 
 	for i, s := range []string{
 		"",
 		"Stderr\n",
-		"Step 3 stderr\n",
 	} {
 		eb, err := jobRunResult.GetStepStderr(i)
 		if err != nil {
@@ -72,7 +69,6 @@ func TestContinueOnError(t *testing.T) {
 	for i, s := range []string {
 		"Do nothing in Step 1\n",
 		"Step 2.1;Step 2.2;Step 2.3;Step 2.4;Step 2.5;\n", // TODO: Actually, there shouldn't be \n at the end but there is
-		"Step 3 stdout\n",
 	} {
 		ob, err := jobRunResult.GetStepStdout(i)
 		if err != nil {

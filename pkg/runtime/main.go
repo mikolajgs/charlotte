@@ -1,4 +1,4 @@
-package runtimeenvironment
+package runtime
 
 import (
 	"charlotte/pkg/step"
@@ -7,17 +7,17 @@ import (
 	"os"
 )
 
-type IRuntimeEnvironment interface {
+type IRuntime interface {
 	Run(step step.IStep, stepNumber int) (string, string, error)
 	Create(steps []step.IStep) error
 	Destroy(steps []step.IStep) error
 }
 
-type RuntimeEnvironment struct {
+type Runtime struct {
 }
 
 // InitRunStep creates temporary files to write the stdout and write the stderr.
-func (r *RuntimeEnvironment) InitStepOutputs(step step.IStep) (*os.File, *os.File, error) {
+func (r *Runtime) InitStepOutputs(step step.IStep) (*os.File, *os.File, error) {
 	fOut, err := os.CreateTemp("", "stepout.*.txt")
 	if err != nil {
 		return nil, nil, fmt.Errorf("error creating tmp file for stdout: %w", err)
@@ -32,8 +32,8 @@ func (r *RuntimeEnvironment) InitStepOutputs(step step.IStep) (*os.File, *os.Fil
 }
 
 // InitStepScript creates temporary file to store the script.
-func (r *RuntimeEnvironment) InitStepScript(step step.IStep) (*os.File, error) {
-	script := step.GetScript()
+func (r *Runtime) InitStepScript(step step.IStep) (*os.File, error) {
+	script := step.GetRunScript()
 	if script == "" {
 		return nil, errors.New("script is empty")
 	}

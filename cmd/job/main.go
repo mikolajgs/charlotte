@@ -2,7 +2,7 @@ package main
 
 import (
 	"charlotte/pkg/job"
-	localruntimeenvironment "charlotte/pkg/runtime-environment/local"
+	localruntime "charlotte/pkg/runtime/local"
 	"fmt"
 	"os"
 
@@ -32,8 +32,8 @@ func runJobHandler(c *gocli.CLI) int {
 		return 1
 	}
 
-	runenv := &localruntimeenvironment.LocalRuntimeEnvironment{}
-	jobRunResult := j.Run(runenv)
+	runenv := &localruntime.LocalRuntime{}
+	jobRunResult := j.Run(runenv, nil)
 	if jobRunResult.Error != nil {
 		fmt.Fprintf(os.Stderr, "Job %s failed locally with: %s\n", c.Flag("file"), jobRunResult.Error.Error())
 	} else {

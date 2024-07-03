@@ -1,14 +1,14 @@
-package jobrunresult
+package jobrun
 
 import (
-	steprunresult "charlotte/pkg/step-run-result"
+	steprun "charlotte/pkg/steprun"
 	"fmt"
 	"os"
 )
 
 type JobRunResult struct {
 	Success bool
-	StepRunResults []*steprunresult.StepRunResult
+	StepRunResults []*steprun.StepRunResult
 	BreakingStep int
 	StepsWithErrors []int
 	Error error
