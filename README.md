@@ -28,7 +28,7 @@ and executes it.
 - [x] step outputs
 - [x] `continue_on_error`
 - [x] values using golang templates
-- [ ] `if` - conditional steps (value templated, must equal to string `'1'` for `true`)
+- [x] `if` - conditional steps (value templated, must equal to string `'true'`)
 - [ ] running step(s) on success
 - [ ] running step(s) on failure
 - [ ] running step(s) always

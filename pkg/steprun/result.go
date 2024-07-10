@@ -5,4 +5,5 @@ type StepRunResult struct {
 	StderrFile string
 	StdoutFile string
 	Error error
+	Skipped bool
 }

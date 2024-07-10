@@ -13,6 +13,7 @@ type ShellStep struct {
 	RunScript       string
 	ID              string `yaml:"id"`
 	Environment     map[string]string `yaml:"environment"`
+	If              string `yaml:"if"`
 }
 
 func (s *ShellStep) GetName() string {
@@ -57,6 +58,10 @@ func (s *ShellStep) GetEnvironment() map[string]string {
 
 func (s *ShellStep) SetEnvironmentVar(n string, v string) {
 	s.Environment[n] = v
+}
+
+func (s *ShellStep) GetIf() string {
+	return s.If
 }
 
 func (s *ShellStep) Validate() (bool, map[string]int) {

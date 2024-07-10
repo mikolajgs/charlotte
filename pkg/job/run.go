@@ -6,6 +6,7 @@ import (
 	"charlotte/pkg/step"
 	steprun "charlotte/pkg/steprun"
 	"fmt"
+	"strings"
 )
 
 // Run executes a Step in a specific Runtime.
@@ -57,6 +58,27 @@ func (j *Job) Run(runtime runtime.IRuntime, inputs *jobrun.JobRunInputs) (*jobru
 		if err != nil {
 			jobRunResult.Error = fmt.Errorf("error processing step '%s' environment whilst running: %w", st.GetName(), err)
 			return jobRunResult
+		}
+
+		// Get if condition
+		ifTpl := strings.TrimSpace(st.GetIf())
+		if ifTpl != "" {
+			ifVal, err := j.getTemplateValue(ifTpl, &templateObj)
+			if err != nil {
+				jobRunResult.Error = fmt.Errorf("error processing step '%s' if (%d) whilst running: %w", st.GetName(), i, err)
+				return jobRunResult
+			}
+			// If condition must return string '1' or 't'
+			if ifVal != "true" {
+				jobRunResult.StepRunResults = append(jobRunResult.StepRunResults, &steprun.StepRunResult{
+					Success: false,
+					StderrFile: "",
+					StdoutFile: "",
+					Error: nil,
+					Skipped: true,
+				})
+				continue
+			}
 		}
 
 		// Get script to execute by processing the go template

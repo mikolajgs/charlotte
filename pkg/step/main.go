@@ -13,4 +13,5 @@ type IStep interface {
 	GetID() string
 	GetEnvironment() map[string]string
 	SetEnvironmentVar(string, string)
+	GetIf() string
 }

@@ -3,6 +3,7 @@ package job
 import (
 	"charlotte/pkg/step"
 	"fmt"
+	"strings"
 )
 
 func (j *Job) validateSteps() error {
@@ -28,6 +29,14 @@ func (j *Job) validateSteps() error {
 		err := j.processStepEnvironment(st, &templateObj, &stepEnvironments)
 		if err != nil {
 			return fmt.Errorf("error processing step '%s' environment: %w", st.GetName(), err)
+		}
+
+		ifTpl := strings.TrimSpace(st.GetIf())
+		if ifTpl != "" {
+			_, err = j.getTemplateValue(ifTpl, &templateObj)
+			if err != nil {
+				return fmt.Errorf("error processing step '%s' if (%d): %w", st.GetName(), i, err)
+			}
 		}
 
 		s, err := j.getTemplateValue(st.GetScript(), &templateObj)
