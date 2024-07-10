@@ -42,23 +42,42 @@ func (j *Job) Run(runtime runtime.IRuntime, inputs *jobrun.JobRunInputs) (*jobru
 	templateObj := struct{
 		Inputs *map[string]string
 		Variables *map[string]string
+		Environment *map[string]string
 		StepOutputs *map[string]map[string]string
 	}{
 		Inputs: &inputMap,
 		Variables: &j.Variables,
+		Environment: &j.Environment,
 		StepOutputs: &stepOutputs,
 	}
 
 	for i, st := range j.Steps.([]step.IStep) {
+		stepEnvironments := map[string]string{}
+		err := j.processStepEnvironment(st, &templateObj, &stepEnvironments)
+		if err != nil {
+			jobRunResult.Error = fmt.Errorf("error processing step '%s' environment whilst running: %w", st.GetName(), err)
+			return jobRunResult
+		}
+
 		// Get script to execute by processing the go template
 		s, err := j.getTemplateValue(st.GetScript(), &templateObj)
 		if err != nil {
 			jobRunResult.Error = fmt.Errorf("error processing step '%s' script (%d) whilst running: %w", st.GetName(), i, err)
+			return jobRunResult
 		}
 		st.SetRunScript(s)
 
+		// Merge global and step environment variables
+		runEnv := map[string]string{}
+		for k, globalVal := range j.Environment {
+			runEnv[k] = globalVal
+		}
+		for k, stepVal := range stepEnvironments {
+			runEnv[k] = stepVal
+		}
+	
 		// Execute step
-		fOut, fErr, err := runtime.Run(st, i)
+		fOut, fErr, err := runtime.Run(st, i, &runEnv)
 
 		suc := true
 		if err != nil {

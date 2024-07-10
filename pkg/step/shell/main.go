@@ -12,6 +12,7 @@ type ShellStep struct {
 	Outputs         map[string]string `yaml:"outputs"`
 	RunScript       string
 	ID              string `yaml:"id"`
+	Environment     map[string]string `yaml:"environment"`
 }
 
 func (s *ShellStep) GetName() string {
@@ -48,6 +49,14 @@ func (s *ShellStep) SetOutput(n string, v string) {
 
 func (s *ShellStep) GetID() string {
 	return s.ID
+}
+
+func (s *ShellStep) GetEnvironment() map[string]string {
+	return s.Environment
+}
+
+func (s *ShellStep) SetEnvironmentVar(n string, v string) {
+	s.Environment[n] = v
 }
 
 func (s *ShellStep) Validate() (bool, map[string]int) {

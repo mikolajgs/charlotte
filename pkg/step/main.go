@@ -11,4 +11,6 @@ type IStep interface {
 	GetOutputs() map[string]string
 	SetOutput(string, string)
 	GetID() string
+	GetEnvironment() map[string]string
+	SetEnvironmentVar(string, string)
 }

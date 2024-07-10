@@ -24,7 +24,7 @@ func (c *LocalRuntime) Destroy(steps []step.IStep) error {
 }
 
 // Run runs a Step and returns error code, error string, path to file containing stdout and path to file containing stderr.
-func (e *LocalRuntime) Run(step step.IStep, stepNumber int) (string, string, error) {
+func (e *LocalRuntime) Run(step step.IStep, stepNumber int, env *map[string]string) (string, string, error) {
 	if _, err := exec.LookPath("bash"); err != nil {
 		return "", "", fmt.Errorf("command bash not found: %w", err)
 	}
@@ -46,7 +46,7 @@ func (e *LocalRuntime) Run(step step.IStep, stepNumber int) (string, string, err
 	defer fOut.Close()
 	defer fErr.Close()
 
-	cmd, stdout, stderr, err := e.CreateCmd("bash", fStep.Name())
+	cmd, stdout, stderr, err := e.CreateCmd(env, "bash", fStep.Name())
 	if err != nil {
 		return "", "", fmt.Errorf("error creating command: %w", err)
 	}
@@ -72,8 +72,15 @@ func (e *LocalRuntime) Run(step step.IStep, stepNumber int) (string, string, err
 }
 
 // CreateCmd creates and returns a command along with io.ReadCloser to attach stdout and stderr.
-func (e *LocalRuntime) CreateCmd(name string, args ...string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, error) {
+func (e *LocalRuntime) CreateCmd(env *map[string]string, name string, args ...string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, error) {
 	cmd := exec.Command(name, args...)
+
+	if env != nil && len(*env)>0 {
+		for k, v := range *env {
+			cmd.Env = append(cmd.Environ(), fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("error piping stdout: %w", err)

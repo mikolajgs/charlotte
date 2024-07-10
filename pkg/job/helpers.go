@@ -2,6 +2,8 @@ package job
 
 import (
 	"bytes"
+	"charlotte/pkg/step"
+	"fmt"
 	"text/template"
 )
 
@@ -22,3 +24,39 @@ func (j *Job) getTemplateValue(tpl string, tplObj interface{}) (string, error) {
 	}
 	return buf.String(), nil
 }
+
+func (j *Job) processStepOutputs(st step.IStep, templateObj interface{}, stepOutputs *map[string]map[string]string) error {
+	outputs := st.GetOutputs()
+	if len(outputs) > 0 {
+		for n, o := range outputs {
+			os, err := j.getTemplateValue(o, templateObj)
+			if err != nil {
+				return fmt.Errorf("error processing step '%s' output '%s': %w", st.GetName(), n, err)
+			}
+
+			_, ok := (*stepOutputs)[st.GetID()]
+			if !ok {
+				(*stepOutputs)[st.GetID()] = map[string]string{}
+			}
+			(*stepOutputs)[st.GetID()][n] = os
+		}
+	}
+
+	return nil
+}
+
+func (j *Job) processStepEnvironment(st step.IStep, templateObj interface{}, stepEnvironments *map[string]string) error {
+	envVars := st.GetEnvironment()
+	if len(envVars) > 0 {
+		for n, ev := range envVars {
+			es, err := j.getTemplateValue(ev, templateObj)
+			if err != nil {
+				return fmt.Errorf("error processing step '%s' output '%s': %w", st.GetName(), n, err)
+			}
+
+			(*stepEnvironments)[n] = es
+		}
+	}
+
+	return nil
+} 

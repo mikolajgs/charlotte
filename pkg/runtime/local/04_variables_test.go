@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var testVariablesWithInputsJob = `name: Test
+var testVariablesJob = `name: Test
 description: Workflow with variable
 variables:
   VAR1: '1234'
@@ -33,7 +33,7 @@ steps:
 `
 
 func TestVariablesWithInputs(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testVariablesWithInputsJob))
+	j, err := job.NewFromBytes([]byte(testVariablesJob))
 	if err != nil {
 		log.Fatal(err)
 	}

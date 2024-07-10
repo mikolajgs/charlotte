@@ -13,15 +13,23 @@ func (j *Job) validateSteps() error {
 	templateObj := struct{
 		Inputs *map[string]string
 		Variables *map[string]string
+		Environment *map[string]string
 		StepOutputs *map[string]map[string]string
 	}{
 		Inputs: &inputMap,
 		Variables: &j.Variables,
+		Environment: &j.Environment,
 		StepOutputs: &stepOutputs,
 	}
 
 	// Loop through steps
 	for i, st := range j.Steps.([]step.IStep) {
+		stepEnvironments := map[string]string{}
+		err := j.processStepEnvironment(st, &templateObj, &stepEnvironments)
+		if err != nil {
+			return fmt.Errorf("error processing step '%s' environment: %w", st.GetName(), err)
+		}
+
 		s, err := j.getTemplateValue(st.GetScript(), &templateObj)
 		if err != nil {
 			return fmt.Errorf("error processing step '%s' script (%d): %w", st.GetName(), i, err)
@@ -45,23 +53,3 @@ func (j *Job) validateSteps() error {
 
 	return nil
 }
-
-func (j *Job) processStepOutputs(st step.IStep, templateObj interface{}, stepOutputs *map[string]map[string]string) error {
-	outputs := st.GetOutputs()
-	if len(outputs) > 0 {
-		for n, o := range outputs {
-			os, err := j.getTemplateValue(o, templateObj)
-			if err != nil {
-				return fmt.Errorf("error processing step '%s' output '%s': %w", st.GetName(), n, err)
-			}
-
-			_, ok := (*stepOutputs)[st.GetID()]
-			if !ok {
-				(*stepOutputs)[st.GetID()] = map[string]string{}
-			}
-			(*stepOutputs)[st.GetID()][n] = os
-		}
-	}
-
-	return nil
-} 

@@ -8,7 +8,7 @@ import (
 )
 
 type IRuntime interface {
-	Run(step step.IStep, stepNumber int) (string, string, error)
+	Run(step step.IStep, stepNumber int, env *map[string]string) (string, string, error)
 	Create(steps []step.IStep) error
 	Destroy(steps []step.IStep) error
 }
