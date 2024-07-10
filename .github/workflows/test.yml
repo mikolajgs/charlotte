@@ -17,21 +17,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: go test
+      - name: Run tests
         shell: bash
         run: |
-          cd cmd/ops-run
-          go test
+          make test
 
-      - name: go build
+      - name: Build binary
         shell: bash
         run: |
-          cd cmd/ops-run
+          cd cmd/job
           go build .
-          ./ops-run
-
-      - name: run-job
-        shell: bash
-        run: |
-          cd cmd/ops-run
-          ./ops-run run-job -f ../../sample-files/job.yaml
+          ./job

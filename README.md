@@ -1,44 +1,45 @@
-# streamline
+# charlotte
 
-#### Latest state
-It's been copied from a different repository so it's probably failing to
-compile.
+### Job
+Simple app that takes a YAML file that contains a set of steps which are bash scripts, wrapped into simple logic, inputs, outputs etc.
+and executes it.
 
-Docker bit is under development so no idea what's there TBH.
+#### Running test suite
 
-#### Building
-Use the following:
+    make test
 
-    cd cmd/ops-run
+#### Building `job` binary
+
+    cd cmd/job
     go build .
 
-#### Testing
-Use the following:
+#### Running `job`
 
-    ./ops-run run-job -f ../../sample-files/job.yaml
+    # TODO: Gotta prepare the YAML file (see _test.go files for now)
+    #cd cmd/job
+    #./job run -f ../../sample-files/job.yaml
 
+#### v0.1
 
-#### Phase 0
-Phase 0 is to get something running simple bash scripts, with some simple
-dependencies between steps, some logic, piping standard output and error.
-And all that should be possible to execute locally, in a specific
-container or on a specified kubernetes cluster.
+- [x] pipe stdout and stderr to files
+- [x] environment (global and in-step)
+- [x] variables
+- [x] job inputs
+- [x] step outputs
+- [x] `continue_on_error`
+- [x] values using golang templates
+- [ ] `if` - conditional steps (value templated, must equal to string `'1'` for `true`)
+- [ ] running step(s) on success
+- [ ] running step(s) on failure
+- [ ] running step(s) always
+- [ ] job outputs (json or write to files in a specific directory)
+- [ ] prepare sample yaml file
+- [ ] add building docker image (ko?) and pushing to our registry
 
-It should be possible to create job specification in YAML.
+#### v0.2
+- [ ] validation
+- [ ] extract steps so that they can be included (include file with inputs) + proper validation for that
+- [ ] ...
 
-Once each phase is done, we shall ensure it's all covered with tests, even
-if we have to write 50 or so of these guys.
-
-
-## TODO
-
-### Phase 0.1 - bash script blocks only
-#### 0.1.4 pipe stdout and stderr properly
-#### 0.1.5 add outputs
-#### 0.1.6 add inputs
-
-### Phase 0.2 - dependencies and handling logic
-...
-### Phase 0.3 - master <-?-> master (worker) <-> worker
-...
-### Phase 0.4 - logging
+### Pipeline
+Layer on top of Jobs.
