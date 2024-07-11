@@ -29,9 +29,9 @@ and executes it.
 - [x] `continue_on_error`
 - [x] values using golang templates
 - [x] `if` - conditional steps (value templated, must equal to string `'true'`)
-- [ ] running step(s) on success
-- [ ] running step(s) on failure
-- [ ] running step(s) always
+- [x] running step(s) on success
+- [x] running step(s) on failure
+- [x] running step(s) always
 - [ ] job outputs (json or write to files in a specific directory)
 - [ ] prepare sample yaml file
 - [ ] add building docker image (ko?) and pushing to our registry

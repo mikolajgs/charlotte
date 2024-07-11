@@ -14,6 +14,7 @@ type ShellStep struct {
 	ID              string `yaml:"id"`
 	Environment     map[string]string `yaml:"environment"`
 	If              string `yaml:"if"`
+	RunAlways       bool   `yaml:"run_always"`
 }
 
 func (s *ShellStep) GetName() string {
@@ -62,6 +63,10 @@ func (s *ShellStep) SetEnvironmentVar(n string, v string) {
 
 func (s *ShellStep) GetIf() string {
 	return s.If
+}
+
+func (s *ShellStep) GetRunAlways() bool {
+	return s.RunAlways
 }
 
 func (s *ShellStep) Validate() (bool, map[string]int) {

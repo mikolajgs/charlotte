@@ -48,8 +48,8 @@ func TestFailingStep(t *testing.T) {
 		t.Errorf("job run should fail with error")
 	}
 
-	// There should be only 2 steps
-	if len(jobRunResult.StepRunResults) != 2 {
+	// Still, there should be 3 step results
+	if len(jobRunResult.StepRunResults) != 3 {
 		t.Errorf("invalid number of step run results")
 	}
 
@@ -77,5 +77,9 @@ func TestFailingStep(t *testing.T) {
 		if string(ob) != s {
 			t.Errorf("stdout for step %d has invalid contents: %s", i, string(ob))
 		}
+	}
+
+	if !jobRunResult.StepRunResults[2].Skipped {
+		t.Errorf("step 2 should be marked as Skipped")
 	}
 }

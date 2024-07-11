@@ -7,6 +7,14 @@ import (
 	"text/template"
 )
 
+type TemplateObj struct {
+	Inputs *map[string]string
+	Variables *map[string]string
+	Environment *map[string]string
+	StepOutputs *map[string]map[string]string
+	Success bool
+}
+
 func (j *Job) getInputsMap() map[string]string {
 	inputMap := map[string]string{}
 	for name, inp := range j.Inputs {
@@ -15,7 +23,7 @@ func (j *Job) getInputsMap() map[string]string {
 	return inputMap
 }
 
-func (j *Job) getTemplateValue(tpl string, tplObj interface{}) (string, error) {
+func (j *Job) getTemplateValue(tpl string, tplObj *TemplateObj) (string, error) {
 	buf := &bytes.Buffer{}
 	t := template.Must(template.New("v").Parse(tpl))
 	err := t.Execute(buf, &tplObj)
@@ -25,7 +33,7 @@ func (j *Job) getTemplateValue(tpl string, tplObj interface{}) (string, error) {
 	return buf.String(), nil
 }
 
-func (j *Job) processStepOutputs(st step.IStep, templateObj interface{}, stepOutputs *map[string]map[string]string) error {
+func (j *Job) processStepOutputs(st step.IStep, templateObj *TemplateObj, stepOutputs *map[string]map[string]string) error {
 	outputs := st.GetOutputs()
 	if len(outputs) > 0 {
 		for n, o := range outputs {
@@ -45,7 +53,7 @@ func (j *Job) processStepOutputs(st step.IStep, templateObj interface{}, stepOut
 	return nil
 }
 
-func (j *Job) processStepEnvironment(st step.IStep, templateObj interface{}, stepEnvironments *map[string]string) error {
+func (j *Job) processStepEnvironment(st step.IStep, templateObj *TemplateObj, stepEnvironments *map[string]string) error {
 	envVars := st.GetEnvironment()
 	if len(envVars) > 0 {
 		for n, ev := range envVars {

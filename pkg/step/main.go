@@ -14,4 +14,5 @@ type IStep interface {
 	GetEnvironment() map[string]string
 	SetEnvironmentVar(string, string)
 	GetIf() string
+	GetRunAlways() bool
 }

@@ -41,3 +41,17 @@ func (r *JobRunResult) GetStepStdout (i int) ([]byte, error) {
 
 	return b, nil
 }
+
+func (r *JobRunResult) SetFailure(e error, i int) {
+	r.Error = e
+	r.Success = false
+	r.BreakingStep = i
+}
+
+func NewJobRunResult() *JobRunResult {
+	r := &JobRunResult{}
+	r.StepRunResults = make([]*steprun.StepRunResult, 0)
+	r.StepsWithErrors = make([]int, 0)
+	r.Success = true
+	return r
+}

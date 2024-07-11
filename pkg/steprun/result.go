@@ -7,3 +7,13 @@ type StepRunResult struct {
 	Error error
 	Skipped bool
 }
+
+func NewSkippedRunResult() *StepRunResult {
+	return &StepRunResult{
+		Success: false,
+		StderrFile: "",
+		StdoutFile: "",
+		Error: nil,
+		Skipped: true,
+	}
+}

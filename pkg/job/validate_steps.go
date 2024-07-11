@@ -11,12 +11,7 @@ func (j *Job) validateSteps() error {
 	stepOutputs := map[string]map[string]string{}
 
 	// Create object injected to templates in Steps
-	templateObj := struct{
-		Inputs *map[string]string
-		Variables *map[string]string
-		Environment *map[string]string
-		StepOutputs *map[string]map[string]string
-	}{
+	templateObj := &TemplateObj{
 		Inputs: &inputMap,
 		Variables: &j.Variables,
 		Environment: &j.Environment,
@@ -26,20 +21,20 @@ func (j *Job) validateSteps() error {
 	// Loop through steps
 	for i, st := range j.Steps.([]step.IStep) {
 		stepEnvironments := map[string]string{}
-		err := j.processStepEnvironment(st, &templateObj, &stepEnvironments)
+		err := j.processStepEnvironment(st, templateObj, &stepEnvironments)
 		if err != nil {
 			return fmt.Errorf("error processing step '%s' environment: %w", st.GetName(), err)
 		}
 
 		ifTpl := strings.TrimSpace(st.GetIf())
 		if ifTpl != "" {
-			_, err = j.getTemplateValue(ifTpl, &templateObj)
+			_, err = j.getTemplateValue(ifTpl, templateObj)
 			if err != nil {
 				return fmt.Errorf("error processing step '%s' if (%d): %w", st.GetName(), i, err)
 			}
 		}
 
-		s, err := j.getTemplateValue(st.GetScript(), &templateObj)
+		s, err := j.getTemplateValue(st.GetScript(), templateObj)
 		if err != nil {
 			return fmt.Errorf("error processing step '%s' script (%d): %w", st.GetName(), i, err)
 		}
@@ -54,7 +49,7 @@ func (j *Job) validateSteps() error {
 			return fmt.Errorf("duplicate step id '%s' found", st.GetID())
 		}
 
-		err = j.processStepOutputs(st, &templateObj, &stepOutputs)
+		err = j.processStepOutputs(st, templateObj, &stepOutputs)
 		if err != nil {
 			return fmt.Errorf("error processing step '%s' outputs: %w", st.GetName(), err)
 		}
