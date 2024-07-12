@@ -8,18 +8,27 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"sync"
 )
 
 type LocalRuntime struct {
 	runtime.Runtime
+	stepOutputsDir string
 }
 
 func (e *LocalRuntime) Create(steps []step.IStep) error {
+	err := e.InitStepOutputs()
+	if err != nil {
+		return fmt.Errorf("error creating local runtime: %w", err)
+	}
 	return nil
 }
 
-func (c *LocalRuntime) Destroy(steps []step.IStep) error {
+func (e *LocalRuntime) Destroy(steps []step.IStep) error {
+	// TODO: Tidy up everything
+	os.Remove(e.stepOutputsDir)
 	return nil
 }
 
@@ -30,16 +39,30 @@ func (e *LocalRuntime) Run(step step.IStep, stepNumber int, env *map[string]stri
 	}
 
 	// fStep is io.File with contents of the script
-	fStep, err := e.InitStepScript(step)
+	fStep, err := e.InitStepScriptContents(step)
 	if err != nil {
 		return "", "", fmt.Errorf("error initializing step script: %w", err)
 	}
 
 	// fOut and fErr are io.File to stdout and stderr
-	fOut, fErr, err := e.InitStepOutputs(step)
+	fOut, fErr, err := e.InitStepScriptOutputs(step)
 	if err != nil {
 		return "", "", fmt.Errorf("error initializing step outputs: %w", err)
 	}
+
+	// Step must have an id, so when it is not defined, we replace it with something
+	if strings.TrimSpace(step.GetID()) == "" {
+		step.SetID(fmt.Sprintf("_no_id_%d", stepNumber))
+	}
+
+	// A temporary directory to store step outputs is created and its path is set
+	// as environment variable whilst executing the script
+	outputsDir, err := e.InitStepOutputsStepDir(step)
+	if err != nil {
+		return "", "", fmt.Errorf("error initializing step outputs step dir: %w", err)
+	}
+	step.SetRunOutputsDir(outputsDir)
+	(*env)["OUTPUTS_DIR"] = step.GetRunOutputsDir()
 
 	defer os.Remove(fStep.Name())
 	defer fStep.Close()
@@ -115,4 +138,27 @@ func (e *LocalRuntime) CreateWaitGroup(stdout io.ReadCloser, fOut *os.File, stde
 		wg.Done()
 	}()
 	return wg
+}
+
+// InitStepOutputs creates a temporary directory to store step outputs
+// Do not confuse with stderr and stdout from StepScriptOutputs
+func (e *LocalRuntime) InitStepOutputs() (error) {
+	fDir, err := os.MkdirTemp("", "step_outputs_*")
+	if err != nil {
+		return fmt.Errorf("error creating tmp dir for all step outputs: %w", err)
+	}
+	e.stepOutputsDir = fDir
+	return nil
+}
+
+// InitStepOutputsStepDir creates a temporary directory to store specific step outputs.
+// The directory will sit within a directory created by InitStepOutputs, and it's name
+// is meant to be a unique step's id.
+func (e *LocalRuntime) InitStepOutputsStepDir(step step.IStep) (string, error) {
+	outputsDir := filepath.Join(e.stepOutputsDir, step.GetID())
+	err := os.Mkdir(outputsDir, 0750)
+	if err != nil {
+		return "", fmt.Errorf("error creating tmp dir for step '%s' outputs: %w", step.GetID(), err)
+	}
+	return outputsDir, nil
 }

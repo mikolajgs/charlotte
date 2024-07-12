@@ -16,8 +16,8 @@ type IRuntime interface {
 type Runtime struct {
 }
 
-// InitRunStep creates temporary files to write the stdout and write the stderr.
-func (r *Runtime) InitStepOutputs(step step.IStep) (*os.File, *os.File, error) {
+// InitStepScriptOutputs creates temporary files to write the stdout and write the stderr.
+func (r *Runtime) InitStepScriptOutputs(step step.IStep) (*os.File, *os.File, error) {
 	fOut, err := os.CreateTemp("", "stepout.*.txt")
 	if err != nil {
 		return nil, nil, fmt.Errorf("error creating tmp file for stdout: %w", err)
@@ -31,8 +31,8 @@ func (r *Runtime) InitStepOutputs(step step.IStep) (*os.File, *os.File, error) {
 	return fOut, fErr, nil
 }
 
-// InitStepScript creates temporary file to store the script.
-func (r *Runtime) InitStepScript(step step.IStep) (*os.File, error) {
+// InitStepScriptContents creates temporary file to store the script.
+func (r *Runtime) InitStepScriptContents(step step.IStep) (*os.File, error) {
 	script := step.GetRunScript()
 	if script == "" {
 		return nil, errors.New("script is empty")
@@ -50,3 +50,5 @@ func (r *Runtime) InitStepScript(step step.IStep) (*os.File, error) {
 
 	return fStep, nil
 }
+
+// TODO: Tidy up Init* functions

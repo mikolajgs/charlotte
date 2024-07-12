@@ -12,6 +12,7 @@ type JobRunResult struct {
 	BreakingStep int
 	StepsWithErrors []int
 	Error error
+	RunOutputs map[string]string
 }
 
 func (r *JobRunResult) GetStepStderr (i int) ([]byte, error) {

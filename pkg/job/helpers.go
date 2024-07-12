@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"charlotte/pkg/step"
 	"fmt"
+	"os"
+	"path/filepath"
 	"text/template"
 )
 
@@ -34,6 +36,7 @@ func (j *Job) getTemplateValue(tpl string, tplObj *TemplateObj) (string, error) 
 }
 
 func (j *Job) processStepOutputs(st step.IStep, templateObj *TemplateObj, stepOutputs *map[string]map[string]string) error {
+	// Process 'outputs' block
 	outputs := st.GetOutputs()
 	if len(outputs) > 0 {
 		for n, o := range outputs {
@@ -47,6 +50,29 @@ func (j *Job) processStepOutputs(st step.IStep, templateObj *TemplateObj, stepOu
 				(*stepOutputs)[st.GetID()] = map[string]string{}
 			}
 			(*stepOutputs)[st.GetID()][n] = os
+		}
+	}
+
+	// Get step outputs saved as files in a temporary outputs directory
+	stepOutputsDir := st.GetRunOutputsDir()
+	if stepOutputsDir == "" {
+		return nil
+	}
+	files, err := os.ReadDir(stepOutputsDir)
+	if err != nil {
+		return fmt.Errorf("error processing step '%s' outputs directory: %w", st.GetName(), err)
+	}
+	for _, file := range files {
+		if file.Type().IsRegular() {
+			data, err := os.ReadFile(filepath.Join(stepOutputsDir, file.Name()))
+			if err != nil {
+				return fmt.Errorf("error getting step '%s' output file: %w", st.GetName(), err)
+			}
+			_, ok := (*stepOutputs)[st.GetID()]
+			if !ok {
+				(*stepOutputs)[st.GetID()] = map[string]string{}
+			}
+			(*stepOutputs)[st.GetID()][file.Name()] = string(data)
 		}
 	}
 

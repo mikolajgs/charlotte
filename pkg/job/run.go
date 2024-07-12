@@ -133,6 +133,17 @@ func (j *Job) Run(runtime runtime.IRuntime, inputs *jobrun.JobRunInputs) (*jobru
 		}
 	}
 
+	// Process job outputs
+	jobRunResult.RunOutputs = map[string]string{}
+	for n, out := range j.Outputs {
+		s, err := j.getTemplateValue(out.Value, templateObj)
+		if err != nil {
+			jobRunResult.SetFailure(fmt.Errorf("error processing output '%s': %w", n, err), 0)
+			continue
+		}
+		jobRunResult.RunOutputs[n] = s
+	}
+
 	return jobRunResult
 }
 
