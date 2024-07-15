@@ -4,49 +4,17 @@ import (
 	"bytes"
 	"charlotte/pkg/job"
 	"log"
+	"os"
 	"testing"
 )
 
-var testIfJob = `name: Test
-description: Workflow with step outputs
-inputs:
-  some_input:
-    default: Joe
-steps:
-  - type: shell
-    name: Step 1
-    id: step_1
-    script: 'echo "Do nada!";'
-    outputs:
-      first_output: '123'
-      second_output: 'name is {{ .Inputs.some_input }}'
-
-  - type: shell
-    if: '{{ eq .Inputs.some_input "Jane" }}'
-    name: Step 2
-    script: |
-      echo "!!! If you can see this then something went wrong"
-  
-  - type: shell
-    if: '{{ and (eq .Inputs.some_input "Joe") (eq .StepOutputs.step_1.first_output "123") }}'
-    name: Step 3
-    script: |
-      >&2 echo "[You should see this one]"
-
-  - type: shell
-    name: Step 4
-    script: |
-      echo "[Also, this one]"
-
-  - type: shell
-    if: 'true'
-    name: Step 5
-    script: |
-      echo "[Again, this one]"
-`
-
 func TestIf(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testIfJob))
+	b, err := os.ReadFile("tests/07_if.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}

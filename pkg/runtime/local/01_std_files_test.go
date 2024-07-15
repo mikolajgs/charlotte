@@ -8,21 +8,13 @@ import (
 	"testing"
 )
 
-var testStdFilesJob = `name: Test
-description: Workflow with bash script steps
-steps:
-  - type: shell
-    name: Step 1
-    description: Simple test step
-    continue_on_error: false
-    script: |
-      echo "Step1 Standard Output Message";
-      >&2 echo "Step1 Standard Error Message";
-
-`
-
 func TestStdoutAndStderr(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testStdFilesJob))
+	b, err := os.ReadFile("tests/01_std_files.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}

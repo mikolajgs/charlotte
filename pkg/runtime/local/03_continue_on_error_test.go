@@ -3,43 +3,17 @@ package localruntime
 import (
 	"charlotte/pkg/job"
 	"log"
+	"os"
 	"testing"
 )
 
-var testContinueOnErrorJob = `name: Test
-description: Workflow with bash script steps
-steps:
-  - type: shell
-    name: Step 1
-    description: Simple test step
-    continue_on_error: false
-    script: |
-      echo "Do nothing in Step 1";
-
-  - type: shell
-    name: Step 2
-    description: This step fails but job should continue
-    continue_on_error: true
-    script: |
-      for i in 1 2 3 4 5; do
-        echo -n "Step 2.$i;"
-        sleep 2;
-      done
-      >&2 echo "Stderr";
-      exit 4;
-
-      echo -n "Step 2.6;"
-
-  - type: shell
-    name: Step 3
-    description: This step should run
-    script: |
-      >&2 echo "Step 3 stderr";
-      echo "Step 3 stdout";
-`
-
 func TestContinueOnError(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testContinueOnErrorJob))
+	b, err := os.ReadFile("tests/03_continue_on_error.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}

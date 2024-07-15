@@ -3,41 +3,17 @@ package localruntime
 import (
 	"charlotte/pkg/job"
 	"log"
+	"os"
 	"testing"
 )
 
-var testFailingJob = `name: Test
-description: Workflow with bash script steps
-steps:
-  - type: shell
-    name: Step 1
-    description: Simple test step
-    script: |
-      echo "Do nothing in Step 1";
-
-  - type: shell
-    name: Step 2
-    description: This step fails and it should not continue further
-    script: |
-      for i in 1 2 3 4 5; do
-        echo -n "Step 2.$i;"
-        sleep 2;
-      done
-      >&2 echo "Stderr";
-      exit 4;
-
-      echo -n "Step 2.6;"
-
-  - type: shell
-    name: Step 3
-    description: This step should run
-    script: |
-      >&2 echo "Step 3 stderr";
-      echo "Step 3 stdout";
-`
-
 func TestFailingStep(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testFailingJob))
+	b, err := os.ReadFile("tests/02_failing_step.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}

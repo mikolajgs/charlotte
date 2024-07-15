@@ -4,75 +4,17 @@ import (
 	"bytes"
 	"charlotte/pkg/job"
 	"log"
+	"os"
 	"testing"
 )
 
-var testPostSuccessJob = `name: Test
-description: Workflow with post steps
-inputs:
-  some_input:
-    default: Joe
-steps:
-  - type: shell
-    name: Step 1
-    script: |
-      echo "Do nothing";
-
-  - type: shell
-    name: Step 2
-    if: '{{ .Success }}'
-    run_always: true
-    script: |
-      echo "You should see this";
-
-  - type: shell
-    if: '{{ not .Success }}'
-    run_always: true
-    name: Step 3
-    script: |
-      echo "You should not see this";
-
-  - type: shell
-    run_always: true
-    name: Step 4
-    script: |
-      echo "You should see that";
-`
-
-var testPostFailureJob = `name: Test
-description: Workflow with post steps
-inputs:
-  some_input:
-    default: Joe
-steps:
-  - type: shell
-    name: Step 1
-    script: |
-      exit 4;
-
-  - type: shell
-    name: Step 2
-    if: '{{ .Success }}'
-    run_always: true
-    script: |
-      echo "You should not see this";
-
-  - type: shell
-    if: '{{ not .Success }}'
-    run_always: true
-    name: Step 3
-    script: |
-      echo "You should see this";
-
-  - type: shell
-    run_always: true
-    name: Step 4
-    script: |
-      echo "You should see that";
-`
-
 func TestPostSuccess(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testPostSuccessJob))
+	b, err := os.ReadFile("tests/08_post_success.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,7 +42,12 @@ func TestPostSuccess(t *testing.T) {
 }
 
 func TestPostFailure(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testPostFailureJob))
+	b, err := os.ReadFile("tests/08_post_failure.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}

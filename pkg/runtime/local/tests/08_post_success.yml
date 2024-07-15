@@ -1,0 +1,30 @@
+name: Test
+description: Workflow with post steps
+inputs:
+  some_input:
+    default: Joe
+steps:
+- type: shell
+  name: Step 1
+  script: |
+    echo "Do nothing";
+
+- type: shell
+  name: Step 2
+  if: '{{ .Success }}'
+  run_always: true
+  script: |
+    echo "You should see this";
+
+- type: shell
+  if: '{{ not .Success }}'
+  run_always: true
+  name: Step 3
+  script: |
+    echo "You should not see this";
+
+- type: shell
+  run_always: true
+  name: Step 4
+  script: |
+    echo "You should see that";

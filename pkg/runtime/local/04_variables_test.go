@@ -4,36 +4,17 @@ import (
 	"bytes"
 	"charlotte/pkg/job"
 	"log"
+	"os"
 	"testing"
 )
 
-var testVariablesJob = `name: Test
-description: Workflow with variable
-variables:
-  VAR1: '1234'
-  VAR2: '{{ index .Inputs "input1" }}'
-  VAR3: '{{ index .Inputs "input1" }}-{{ index .Inputs "input2" }}'
-  VAR4: '{{ if eq (index .Inputs "input1") "Jane" }}Jane{{ else }}Joe{{ end }}'
-inputs:
-  input1:
-    default: "Jane"
-  input2:
-    default: "Joe"
-steps:
-  - type: shell
-    name: Step 1
-    script: |
-      echo "stdout:{{ index .Variables "VAR1" }}";
-      >&2 echo "stderr:{{ index .Variables "VAR2" }}";
-  - type: shell
-    name: Step 2
-    script: |
-      echo "stdout:{{ index .Variables "VAR3" }}";
-      >&2 echo "stderr:{{ index .Variables "VAR1" }}-{{ index .Variables "VAR3" }}";
-`
-
 func TestVariablesWithInputs(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testVariablesJob))
+	b, err := os.ReadFile("tests/04_variables.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}

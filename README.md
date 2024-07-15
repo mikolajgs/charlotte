@@ -19,6 +19,8 @@ and executes it.
     ./job run-local -j ../../sample-files/job.yaml -r /tmp/job-result.txt -i ../../sample-files/job-inputs.json --quiet
     cat /tmp/job-result.txt
 
+Also, there are test files in the `pkg/job/runtime/local/tests` directory that can be used.
+
 #### v0.1
 
 - [x] pipe stdout and stderr to files
@@ -36,8 +38,7 @@ and executes it.
 - [x] gather job outputs 
 - [x] write job outputs to json file
 - [x] handle input: `--inputs`, `--job`, `--result` without aliases (and `--quiet`)
-- [ ] prepare sample yaml files - same as the test ones, so the test would just include them?
-- [ ] add building docker image (ko?) and pushing to our registry
+- [x] prepare sample yaml files - same as the test ones, so the test would just include them?
 
 #### v0.2
 - [ ] validation

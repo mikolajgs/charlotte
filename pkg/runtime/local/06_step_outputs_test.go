@@ -4,60 +4,17 @@ import (
 	"bytes"
 	"charlotte/pkg/job"
 	"log"
+	"os"
 	"testing"
 )
 
-var testStepOutputsJob = `name: Test
-description: Workflow with step outputs
-inputs:
-  some_input:
-    default: Joe
-steps:
-  - type: shell
-    name: Step 1
-    id: step_1
-    script: 'echo "Do nada!";'
-    outputs:
-      first_output: '123'
-      second_output: 'name is {{ .Inputs.some_input }}'
-
-  - type: shell
-    name: Step 2
-    script: |
-      echo "[{{ .StepOutputs.step_1.second_output }}]"
-  
-  - type: shell
-    name: Step 3
-    script: |
-      >&2 echo "[{{ .StepOutputs.step_1.first_output }}]"
-
-  - type: shell
-    id: step_4
-    name: Step 4
-    script: |
-      echo -n "{{ .Inputs.some_input }} Smith" > $OUTPUTS_DIR/third_output
-
-  - type: shell
-    name: Step 5
-    script: |
-      echo "{{ .StepOutputs.step_4.third_output }}"
-
-  - type: shell
-    name: Step 6
-    id: step_6
-    script: |
-      echo -n "Jane" > $OUTPUTS_DIR/fourth_output
-    outputs:
-      fourth_output: Not overridding
-
-  - type: shell
-    name: Step 7
-    script: |
-      echo "{{ .StepOutputs.step_6.fourth_output }}"
-`
-
 func TestStepOutputs(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testStepOutputsJob))
+	b, err := os.ReadFile("tests/06_step_outputs.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}

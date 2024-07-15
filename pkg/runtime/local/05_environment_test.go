@@ -4,40 +4,17 @@ import (
 	"bytes"
 	"charlotte/pkg/job"
 	"log"
+	"os"
 	"testing"
 )
 
-var testEnvJob = `name: Test
-description: Workflow with variable
-environment:
-  ENV1: '12-{{ index .Variables "VAR2" }}-{{ index .Inputs "input2" }}-34'
-  ENV2: '34-{{ index .Variables "VAR1" }}-{{ index .Inputs "input1" }}-56'
-variables:
-  VAR1: '1234'
-  VAR2: '{{ index .Inputs "input1" }}'
-inputs:
-  input1:
-    default: "Jane"
-  input2:
-    default: "Joe"
-steps:
-  - type: shell
-    name: Step 1
-    script: |
-      echo "{{ if eq (index .Environment "ENV1") "x" }}x{{ else }}{{ index .Environment "ENV2" }}{{ end }}!";
-      >&2 echo "[$ENV1][$ENV2]";
-  - type: shell
-    name: Step 2
-    environment:
-      STEP_ENV1: Step1
-      ENV2: 'Env2 Overridden'
-    script: |
-      echo "[$STEP_ENV1][$ENV2]"
-
-`
-
 func TestEnvWithVarsWithInputs(t *testing.T) {
-	j, err := job.NewFromBytes([]byte(testEnvJob))
+	b, err := os.ReadFile("tests/05_environment.yml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	j, err := job.NewFromBytes(b)
 	if err != nil {
 		log.Fatal(err)
 	}
