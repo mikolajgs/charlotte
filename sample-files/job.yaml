@@ -1,5 +1,11 @@
 name: Test
 description: Workflow with bash script steps
+inputs:
+  input_1:
+    required: true
+  input_2:
+    required: true
+    regexp: ^[A-Za-z0-9]+$
 outputs:
   output_1:
     value: '{{ .StepOutputs.step_1.output_1 }}'
@@ -10,24 +16,8 @@ steps:
     name: Step 1
     id: step_1
     description: Simple test step
-    continue_on_error: false
     script: |
-      echo "Step1 Standard Output Message";
-      >&2 echo "Step1 Standard Error Message";
+      echo "Step1 Standard Output Message: {{ .Inputs.input_1 }}";
+      >&2 echo "Step1 Standard Error Message: {{ .Inputs.input_2 }} ";
       echo -n "output1" > $OUTPUTS_DIR/output_1
       echo -n "output2" > $OUTPUTS_DIR/output_2
-      exit 4;
-
-  - type: shell
-    name: Step 2
-    description: This step fails but should continue
-    continue_on_error: true
-    script: |
-      for i in 1 2 3 4 5; do
-        echo -n "Step 2.$i;"
-        sleep 2;
-      done
-      >&2 echo "Stderr";
-      exit 4;
-
-      echo -n "Step 2.6;"

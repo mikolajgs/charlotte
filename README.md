@@ -16,7 +16,8 @@ and executes it.
 #### Running `job`
 
     cd cmd/job
-    ./job run -f ../../sample-files/job.yaml
+    ./job run-local -j ../../sample-files/job.yaml -r /tmp/job-result.txt -i ../../sample-files/job-inputs.json --quiet
+    cat /tmp/job-result.txt
 
 #### v0.1
 
@@ -34,7 +35,7 @@ and executes it.
 - [x] tmp directory for step outputs
 - [x] gather job outputs 
 - [x] write job outputs to json file
-- [ ] handle input: `--inputs`, `--job`, `--result` without aliases (and `--quiet`)
+- [x] handle input: `--inputs`, `--job`, `--result` without aliases (and `--quiet`)
 - [ ] prepare sample yaml files - same as the test ones, so the test would just include them?
 - [ ] add building docker image (ko?) and pushing to our registry
 
