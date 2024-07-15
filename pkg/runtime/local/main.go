@@ -16,6 +16,14 @@ import (
 type LocalRuntime struct {
 	runtime.Runtime
 	stepOutputsDir string
+	quiet bool
+}
+
+func NewLocalRuntime(quiet bool) *LocalRuntime {
+	l := LocalRuntime{
+		quiet: quiet,
+	}
+	return &l
 }
 
 func (e *LocalRuntime) Create(steps []step.IStep) error {
@@ -79,7 +87,7 @@ func (e *LocalRuntime) Run(step step.IStep, stepNumber int, env *map[string]stri
 	}
 
 	// create wait group that attaches stdout and stderr to files
-	wg := e.CreateWaitGroup(stdout, fOut, stderr, fErr)
+	wg := e.CreateWaitGroup(stdout, fOut, stderr, fErr, false)
 	wg.Wait()
 
 	// wait for the command to finish
@@ -118,12 +126,17 @@ func (e *LocalRuntime) CreateCmd(env *map[string]string, name string, args ...st
 }
 
 // CreateWaitGroup creates WaitGroups that will pipe stdout and stderr to specific files.
-func (e *LocalRuntime) CreateWaitGroup(stdout io.ReadCloser, fOut *os.File, stderr io.ReadCloser, fErr *os.File) *sync.WaitGroup {
+func (e *LocalRuntime) CreateWaitGroup(stdout io.ReadCloser, fOut *os.File, stderr io.ReadCloser, fErr *os.File, quiet bool) *sync.WaitGroup {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	go func() {
 		scanner := bufio.NewScanner(stdout)
-		writer := io.MultiWriter(fOut, os.Stdout)
+		var writer io.Writer
+		if !e.quiet {
+			writer = io.MultiWriter(fOut, os.Stdout)
+		} else {
+			writer = fOut
+		}
 		for scanner.Scan() {
 			fmt.Fprintln(writer, scanner.Text())
 		}
@@ -131,7 +144,12 @@ func (e *LocalRuntime) CreateWaitGroup(stdout io.ReadCloser, fOut *os.File, stde
 	}()
 	go func() {
 		scanner := bufio.NewScanner(stderr)
-		writer := io.MultiWriter(fErr, os.Stderr)
+		var writer io.Writer
+		if !e.quiet {
+			writer = io.MultiWriter(fErr, os.Stderr)
+		} else {
+			writer = fErr
+		}
 		for scanner.Scan() {
 			fmt.Fprintln(writer, scanner.Text())
 		}

@@ -7,12 +7,13 @@ import (
 )
 
 type JobRunResult struct {
-	Success bool
-	StepRunResults []*steprun.StepRunResult
-	BreakingStep int
-	StepsWithErrors []int
-	Error error
-	RunOutputs map[string]string
+	Success bool `json:"success"`
+	StepRunResults []*steprun.StepRunResult `json:"-"`
+	BreakingStep int `json:"breaking_step"`
+	StepsWithErrors []int `json:"steps_with_errors"`
+	Error error `json:"-"`
+	ErrorString string `json:"error"`
+	Outputs map[string]string `json:"outputs,omit_empty"`
 }
 
 func (r *JobRunResult) GetStepStderr (i int) ([]byte, error) {

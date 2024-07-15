@@ -34,7 +34,7 @@ and executes it.
 - [x] running step(s) always
 - [x] tmp directory for step outputs
 - [x] gather job outputs 
-- [ ] write job outputs to json file
+- [x] write job outputs to json file
 - [ ] prepare sample yaml file
 - [ ] add building docker image (ko?) and pushing to our registry
 

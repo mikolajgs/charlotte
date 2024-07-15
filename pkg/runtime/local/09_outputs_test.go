@@ -43,10 +43,10 @@ func TestOutputs(t *testing.T) {
 		t.Errorf("job run should not fail with error")
 	}
 
-	if jobRunResult.RunOutputs["output_1"] != "[Jane]" {
+	if jobRunResult.Outputs["output_1"] != "[Jane]" {
 		t.Errorf("job has invalid output")
 	}
-	if jobRunResult.RunOutputs["output_2"] != "[[Joe]]" {
+	if jobRunResult.Outputs["output_2"] != "[[Joe]]" {
 		t.Errorf("job has invalid output")
 	}
 }
