@@ -15,9 +15,8 @@ and executes it.
 
 #### Running `job`
 
-    # TODO: Gotta prepare the YAML file (see _test.go files for now)
-    #cd cmd/job
-    #./job run -f ../../sample-files/job.yaml
+    cd cmd/job
+    ./job run -f ../../sample-files/job.yaml
 
 #### v0.1
 
@@ -35,7 +34,8 @@ and executes it.
 - [x] tmp directory for step outputs
 - [x] gather job outputs 
 - [x] write job outputs to json file
-- [ ] prepare sample yaml file
+- [ ] handle input: `--inputs`, `--job`, `--result` without aliases (and `--quiet`)
+- [ ] prepare sample yaml files - same as the test ones, so the test would just include them?
 - [ ] add building docker image (ko?) and pushing to our registry
 
 #### v0.2

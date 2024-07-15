@@ -17,3 +17,17 @@ steps:
       echo -n "output1" > $OUTPUTS_DIR/output_1
       echo -n "output2" > $OUTPUTS_DIR/output_2
       exit 4;
+
+  - type: shell
+    name: Step 2
+    description: This step fails but should continue
+    continue_on_error: true
+    script: |
+      for i in 1 2 3 4 5; do
+        echo -n "Step 2.$i;"
+        sleep 2;
+      done
+      >&2 echo "Stderr";
+      exit 4;
+
+      echo -n "Step 2.6;"
