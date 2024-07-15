@@ -1,38 +1,23 @@
 name: Test
-description: A simple workflow that would run simple bash steps
+description: Workflow with bash script steps
+inputs:
+  input_1:
+    required: true
+  input_2:
+    required: true
+    regexp: ^[A-Za-z0-9]+$
+outputs:
+  output_1:
+    value: '{{ .StepOutputs.step_1.output_1 }}'
+  output_2:
+    value: '{{ .StepOutputs.step_1.output_2 }}'
 steps:
-  - type: shellScript
+  - type: shell
     name: Step 1
+    id: step_1
     description: Simple test step
-    continueOnError: false
     script: |
-      echo "hello world!";
-
-  - type: shellScript
-    name: Step 2
-    description: Simple test step 2
-    continueOnError: true
-    script: |
-      echo "I can count!";
-      
-      for i in 1 2 3 4 5; do
-        echo "$i";
-        sleep 1;
-      done
-      
-      echo "Hello there!";
-      
-      cat >> /tmp/my-tmp-file <<EOF
-      Oh, just testing the heredoc
-      EOF
-      
-      echo "Actually, I wanted to test multiple line bash script"
-      exit 124;
-
-  - type: shellScript
-    name: Step 3
-    description: Simple test step
-    continueOnError: false
-    script: |
-      echo "Let's cat the file:";
-      cat /tmp/my-tmp-file  
+      echo "Step1 Standard Output Message: {{ .Inputs.input_1 }}";
+      >&2 echo "Step1 Standard Error Message: {{ .Inputs.input_2 }} ";
+      echo -n "output1" > $OUTPUTS_DIR/output_1
+      echo -n "output2" > $OUTPUTS_DIR/output_2

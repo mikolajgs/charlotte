@@ -6,4 +6,16 @@ type IStep interface {
 	GetContinueOnError() bool
 	Validate() (bool, map[string]int)
 	GetScript() string
+	GetRunScript() string
+	SetRunScript(string)
+	GetOutputs() map[string]string
+	SetOutput(string, string)
+	GetID() string
+	SetID(string)
+	GetEnvironment() map[string]string
+	SetEnvironmentVar(string, string)
+	GetIf() string
+	GetRunAlways() bool
+	GetRunOutputsDir() string
+	SetRunOutputsDir(string)
 }

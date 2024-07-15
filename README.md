@@ -1,47 +1,49 @@
-# streamline
+# charlotte
 
-#### Latest state
-It's been copied from a different repository so it's probably failing to
-compile.
+### Job
+Simple app that takes a YAML file that contains a set of steps which are bash scripts, wrapped into simple logic, inputs, outputs etc.
+and executes it.
 
-Docker bit is under development so no idea what's there TBH.
+#### Running test suite
 
-#### Building
-Use the following:
+    make test
 
-    cd cmd/ops-run
+#### Building `job` binary
+
+    cd cmd/job
     go build .
 
-#### Testing
-Use the following:
+#### Running `job`
 
-    ./ops-run run-job -f ../../sample-files/job.yaml
+    cd cmd/job
+    ./job run-local -j ../../sample-files/job.yaml -r /tmp/job-result.txt -i ../../sample-files/job-inputs.json --quiet
+    cat /tmp/job-result.txt
 
+Also, there are test files in the `pkg/job/runtime/local/tests` directory that can be used.
 
-#### Phase 0
-Phase 0 is to get something running simple bash scripts, with some simple
-dependencies between steps, some logic, piping standard output and error.
-And all that should be possible to execute locally, in a specific
-container or on a specified kubernetes cluster.
+#### v0.1
 
-It should be possible to create job specification in YAML.
+- [x] pipe stdout and stderr to files
+- [x] environment (global and in-step)
+- [x] variables
+- [x] job inputs
+- [x] step outputs
+- [x] `continue_on_error`
+- [x] values using golang templates
+- [x] `if` - conditional steps (value templated, must equal to string `'true'`)
+- [x] running step(s) on success
+- [x] running step(s) on failure
+- [x] running step(s) always
+- [x] tmp directory for step outputs
+- [x] gather job outputs 
+- [x] write job outputs to json file
+- [x] handle input: `--inputs`, `--job`, `--result` without aliases (and `--quiet`)
+- [x] prepare sample yaml files - same as the test ones, so the test would just include them?
 
-Once each phase is done, we shall ensure it's all covered with tests, even
-if we have to write 50 or so of these guys.
+#### v0.2
+- [ ] validation
+- [ ] extract steps so that they can be included (include file with inputs) + proper validation for that
+- [ ] ...
 
-
-## TODO
-
-### Phase 0.1 - bash script blocks only
-#### 0.1.1 run them locally
-#### 0.1.2 spin a docker container and run inside
-#### 0.1.3 spin a pod in a kubernetes cluster
-#### 0.1.4 pipe stdout and stderr properly
-#### 0.1.5 add outputs
-#### 0.1.6 add inputs
-
-### Phase 0.2 - dependencies and handling logic
-...
-### Phase 0.3 - master <-?-> master (worker) <-> worker
-...
-
+### Pipeline
+Layer on top of Jobs.

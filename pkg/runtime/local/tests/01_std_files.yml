@@ -1,0 +1,10 @@
+name: Test
+description: Workflow with bash script steps
+steps:
+- type: shell
+  name: Step 1
+  description: Simple test step
+  continue_on_error: false
+  script: |
+    echo "Step1 Standard Output Message";
+    >&2 echo "Step1 Standard Error Message";

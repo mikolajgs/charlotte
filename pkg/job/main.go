@@ -3,14 +3,11 @@ package job
 import (
 	"charlotte/pkg/input"
 	"charlotte/pkg/output"
-	runtimeenvironment "charlotte/pkg/runtime-environment"
 	"charlotte/pkg/step"
-	shellscriptstep "charlotte/pkg/step/shell-script"
+	shellstep "charlotte/pkg/step/shell"
 	"fmt"
-	"io/ioutil"
 	"os"
 
-	"github.com/mikogs/go-valifieldator"
 	_ "gopkg.in/yaml.v2"
 	"gopkg.in/yaml.v3"
 )
@@ -18,42 +15,20 @@ import (
 type Job struct {
 	Name        string           `yaml:"name" validation:"req lenmin:2 lenmax:80"`
 	Description string           `yaml:"description" validation:"lenmax:240"`
-	Inputs      []*input.Input   `yaml:"inputs"`
-	Outputs     []*output.Output `yaml:"outputs"`
+	Inputs      map[string]*input.Input   `yaml:"inputs"`
+	Outputs     map[string]*output.Output `yaml:"outputs"`
 	Steps       interface{}      `yaml:"steps"`
+	Variables		map[string]string `yaml:"variables"`
+	Environment map[string]string `yaml:"environment"`
 }
 
-func (j *Job) Validate() (bool, map[string]int) {
-	isValid, failedFields := valifieldator.Validate(j, &valifieldator.ValidationOptions{})
-	return isValid, failedFields
-}
-
-// Run executes a Step in a specific RuntimeEnvironment.
-func (j *Job) Run(runtime runtimeenvironment.IRuntimeEnvironment) (int, []string) {
-	for _, step := range j.Steps.([]step.IStep) {
-		exitCode, errors, fOut, fErr := runtime.Run(step)
-		fmt.Fprintf(os.Stdout, "exitCode: %d\n", exitCode)
-		fmt.Fprintf(os.Stdout, "errors: %v\n", errors)
-		fmt.Fprintf(os.Stdout, "fOut: %s\n", fOut)
-		fmt.Fprintf(os.Stdout, "fErr: %s\n", fErr)
-		if exitCode != 0 && !step.GetContinueOnError() {
-			return exitCode, errors
-		}
-	}
-
-	return 0, []string{}
-}
-
-// NewFromFile creates Job instance from path to a YAML file.
-func NewFromFile(f string) (*Job, error) {
+// NewFromBytes creates Job instance from bytes array
+func NewFromBytes(b []byte) (*Job, error) {
 	var j Job
-	b, err := ioutil.ReadFile(f)
+
+	err := yaml.Unmarshal(b, &j)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot read file %s: %w\n", f, err)
-	}
-	err = yaml.Unmarshal(b, &j)
-	if err != nil {
-		return nil, fmt.Errorf("Cannot unmarshal %s: %w\n", f, err)
+		return nil, fmt.Errorf("cannot unmarshal: %w", err)
 	}
 
 	newSteps := make([]step.IStep, 0)
@@ -61,22 +36,42 @@ func NewFromFile(f string) (*Job, error) {
 		step := s.(map[string]interface{})
 		typ, ok := step["type"].(string)
 		if !ok {
-			return nil, fmt.Errorf("Invalid type of step %d: %w\n", f, err)
+			return nil, fmt.Errorf("invalid type of step %d: %w", i, err)
 		}
-		if typ == "shellScript" {
-			var newStep shellscriptstep.ShellScriptStep
+		if typ == "shell" {
+			var newStep shellstep.ShellStep
 			stepBytes, err := yaml.Marshal(s)
 			if err != nil {
-				return nil, fmt.Errorf("Error marshalling step %d: %w\n", i, err)
+				return nil, fmt.Errorf("error marshalling step %d: %w", i, err)
 			}
+
 			err = yaml.Unmarshal(stepBytes, &newStep)
 			if err != nil {
-				return nil, fmt.Errorf("Error unmarshalling marshalled step %d: %w\n", i, err)
+				return nil, fmt.Errorf("error unmarshalling marshalled step %d: %w", i, err)
 			}
+
 			newSteps = append(newSteps, &newStep)
 		}
 	}
+
+	for n := range j.Inputs {
+		j.Inputs[n].Name = n
+	}
+
 	j.Steps = newSteps
 
 	return &j, nil
+}
+
+// NewFromFile creates Job instance from path to a YAML file.
+func NewFromFile(f string) (*Job, error) {
+	b, err := os.ReadFile(f)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read file %s: %w", f, err)
+	}
+	j, err := NewFromBytes(b)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create from bytes: %w", err)
+	}
+	return j, nil
 }
