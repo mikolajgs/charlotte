@@ -6,6 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/docker/docker v25.0.3+incompatible
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/nicholasgasior/go-broccli v2.0.0+incompatible
 	github.com/nicholasgasior/struct-validator v0.3.0
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b
