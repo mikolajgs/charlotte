@@ -4,20 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
-	gocli "github.com/nicholasgasior/go-broccli"
+	"github.com/mikolajgs/broccli"
 )
 
 func main() {
-	cli := gocli.NewCLI("agent", "Receive jobs and execute them", "Streamln <hello@streamln.dev>")
+	cli := broccli.NewCLI("agent", "Receive jobs and execute them", "Streamln <hello@streamln.dev>")
 	cmdStart := cli.AddCmd("start", "Starts daemon", startHandler)
-	cmdStart.AddFlag("http-port", "p", "", "Port for HTTP daemon", gocli.TypeInt, gocli.IsRequired)
-	cmdStart.AddFlag("db-file", "d", "", "Path to database file", gocli.TypeString, gocli.IsRequired)
+	cmdStart.AddFlag("http-port", "p", "", "Port for HTTP daemon", broccli.TypeInt, broccli.IsRequired)
+	cmdStart.AddFlag("db-file", "d", "", "Path to database file", broccli.TypeString, broccli.IsRequired)
 	_ = cli.AddCmd("version", "Prints version", versionHandler)
 	if len(os.Args) == 2 && (os.Args[1] == "-v" || os.Args[1] == "--version") {
 		os.Args = []string{"App", "version"}
@@ -25,12 +26,12 @@ func main() {
 	os.Exit(cli.Run())
 }
 
-func versionHandler(c *gocli.CLI) int {
+func versionHandler(c *broccli.CLI) int {
 	fmt.Fprintf(os.Stdout, VERSION+"\n")
 	return 0
 }
 
-func startHandler(c *gocli.CLI) int {
+func startHandler(c *broccli.CLI) int {
 	db, err := initDatabase(c.Flag("db-file"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error initializing database: %s\n", err.Error())
@@ -49,6 +50,7 @@ func startHandler(c *gocli.CLI) int {
 
 				id, err := insertJobRun(db, string(body));
 				if err != nil {
+					log.Printf("e: %s", err.Error())
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}

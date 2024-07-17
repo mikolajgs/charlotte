@@ -1,7 +1,7 @@
 package input
 
 import (
-	structvalidator "github.com/nicholasgasior/struct-validator"
+	structvalidator "github.com/mikolajgs/struct-validator"
 	_ "gopkg.in/yaml.v2"
 )
 
