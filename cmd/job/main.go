@@ -8,18 +8,18 @@ import (
 	"fmt"
 	"os"
 
-	gocli "github.com/nicholasgasior/go-broccli"
+	"github.com/mikolajgs/broccli"
 )
 
 func main() {
-	cli := gocli.NewCLI("job", "Run job locally", "Streamln <hello@streamln.dev>")
+	cli := broccli.NewCLI("job", "Run job locally", "Streamln <hello@streamln.dev>")
 	cmdRun := cli.AddCmd("run-local", "Runs YAML job file", runJobHandler)
-	cmdRun.AddFlag("job", "j", "FILENAME", "Path to filename with a job", gocli.TypePathFile, gocli.IsRequired|gocli.IsExistent|gocli.IsRegularFile)
-	cmdRun.AddFlag("inputs", "i", "FILENAME", "Path to file containing input values", gocli.TypePathFile, gocli.IsRequired|gocli.IsExistent|gocli.IsRegularFile)
-	cmdRun.AddFlag("quiet", "q", "", "Do not print step stdout and stderr", gocli.TypeBool, 0, gocli.OnTrue(func(c *gocli.Cmd) {
+	cmdRun.AddFlag("job", "j", "FILENAME", "Path to filename with a job", broccli.TypePathFile, broccli.IsRequired|broccli.IsExistent|broccli.IsRegularFile)
+	cmdRun.AddFlag("inputs", "i", "FILENAME", "Path to file containing input values", broccli.TypePathFile, broccli.IsRequired|broccli.IsExistent|broccli.IsRegularFile)
+	cmdRun.AddFlag("quiet", "q", "", "Do not print step stdout and stderr", broccli.TypeBool, 0, broccli.OnTrue(func(c *broccli.Cmd) {
 
 	}))
-	cmdRun.AddFlag("result", "r", "FILENAME", "Path to write JSON result", gocli.TypePathFile, 0)
+	cmdRun.AddFlag("result", "r", "FILENAME", "Path to write JSON result", broccli.TypePathFile, 0)
 	_ = cli.AddCmd("version", "Prints version", versionHandler)
 	if len(os.Args) == 2 && (os.Args[1] == "-v" || os.Args[1] == "--version") {
 		os.Args = []string{"App", "version"}
@@ -27,12 +27,12 @@ func main() {
 	os.Exit(cli.Run())
 }
 
-func versionHandler(c *gocli.CLI) int {
+func versionHandler(c *broccli.CLI) int {
 	fmt.Fprintf(os.Stdout, VERSION+"\n")
 	return 0
 }
 
-func runJobHandler(c *gocli.CLI) int {
+func runJobHandler(c *broccli.CLI) int {
 	jobFile := c.Flag("job")
 	j, err := job.NewFromFile(jobFile)
 	if err != nil {
