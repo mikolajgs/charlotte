@@ -10,6 +10,8 @@ require (
 	github.com/mikolajgs/broccli v2.0.0+incompatible
 	github.com/mikolajgs/struct-validator v0.3.1
 	github.com/mikolajgs/struct2sql v0.2.3
+	github.com/mikolajgs/broccli v2.0.0+incompatible
+	github.com/mikolajgs/struct-validator v0.3.1
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
